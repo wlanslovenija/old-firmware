@@ -1,0 +1,60 @@
+# 
+# Copyright (C) 2006 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
+# $Id: Makefile 10045 2007-12-30 03:15:03Z nbd $
+
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=serdisplib
+PKG_VERSION:=1.96
+PKG_RELEASE:=1
+
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=@SF/serdisplib
+PKG_MD5SUM:=b074e02d8d63f34cba8ec45c23f63f78
+
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/serdisplib
+  SECTION:=libs
+  CATEGORY:=Libraries
+  TITLE:=A display control library
+  URL:=http://serdisplib.sourceforge.net/
+endef
+
+define Package/serdisplib/description
+	serdisplib is a library to drive serial and parallel displays 
+	with built-in controllers.
+endef
+
+define Build/Configure
+	$(call Build/Configure/Default, \
+		--enable-shared \
+		--enable-static \
+	)
+endef
+
+define Build/Compile
+	$(MAKE) -C $(PKG_BUILD_DIR) \
+		CFLAGS="$(TARGET_CFLAGS) -Wall -Wno-implicit -fPIC -I../include -I.." \
+		all
+endef
+
+define Build/InstallDev
+	mkdir -p $(1)/usr/include
+	$(CP) $(PKG_BUILD_DIR)/include/serdisplib $(1)/usr/include/
+	mkdir -p $(1)/usr/lib
+	$(CP) $(PKG_BUILD_DIR)/lib/libserdisp.{a,so*} $(1)/usr/lib/
+endef
+
+define Package/serdisplib/install
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(CP) $(PKG_BUILD_DIR)/lib/libserdisp.so.* $(1)/usr/lib
+endef
+
+$(eval $(call BuildPackage,serdisplib))

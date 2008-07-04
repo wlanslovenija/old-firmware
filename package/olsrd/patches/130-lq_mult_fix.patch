@@ -1,0 +1,11 @@
+--- olsrd-a5b9cf969979.orig/src/link_set.c      2008-02-06 19:32:49.000000000 +0100
++++ olsrd-a5b9cf969979/src/link_set.c   2008-04-17 15:33:40.000000000 +0200
+@@ -349,7 +349,7 @@
+
+   // find the interface for the link
+
+-  inter = if_ifwithaddr(&entry->local_iface_addr);
++  inter = entry->if_name ? if_ifwithname(entry->if_name) : if_ifwithaddr(&entry->local_iface_addr);
+
+   // find the interface configuration for the interface
+

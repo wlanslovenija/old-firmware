@@ -1,0 +1,33 @@
+Index: shorewall-3.4.6/install.sh
+===================================================================
+--- shorewall-3.4.6.orig/install.sh	2007-09-04 21:51:24.000000000 +0200
++++ shorewall-3.4.6/install.sh	2007-09-04 21:51:24.000000000 +0200
+@@ -676,28 +676,6 @@
+ fi
+ 
+ #
+-# Install the Man Pages
+-#
+-
+-cd manpages
+-
+-for f in *.5; do
+-    gzip -c $f > $f.gz
+-    run_install -D  -m 0444 $f.gz ${PREFIX}/usr/share/man/man5/$f.gz
+-    echo "Man page $f.gz installed to /usr/share/man/man5/$f.gz"
+-done
+-
+-for f in *.8; do
+-    gzip -c $f > $f.gz
+-    run_install -D  -m 0444 $f.gz ${PREFIX}/usr/share/man/man8/$f.gz
+-    echo "Man page $f.gz installed to /usr/share/man/man8/$f.gz"
+-done
+-
+-cd ..
+-
+-echo "Man Pages Installed"
+-
+-#
+ # Install the firewall script
+ #
+ install_file firewall ${PREFIX}/usr/share/shorewall/firewall 0555

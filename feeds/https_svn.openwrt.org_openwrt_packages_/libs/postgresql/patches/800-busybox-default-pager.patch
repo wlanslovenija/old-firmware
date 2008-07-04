@@ -1,0 +1,15 @@
+Index: postgresql-8.3.0/src/bin/psql/print.h
+===================================================================
+--- postgresql-8.3.0.orig/src/bin/psql/print.h	2008-01-01 13:45:56.000000000 -0600
++++ postgresql-8.3.0/src/bin/psql/print.h	2008-02-06 16:29:56.000000000 -0600
+@@ -89,10 +89,6 @@
+ 
+ void		setDecimalLocale(void);
+ 
+-#ifndef __CYGWIN__
+-#define DEFAULT_PAGER "more"
+-#else
+ #define DEFAULT_PAGER "less"
+-#endif
+ 
+ #endif   /* PRINT_H */

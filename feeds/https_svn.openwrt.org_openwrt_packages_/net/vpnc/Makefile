@@ -1,0 +1,59 @@
+#
+# Copyright (C) 2006 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
+# $Id: Makefile 9974 2007-12-28 13:31:04Z nix $
+
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=vpnc
+PKG_VERSION:=0.4.0
+PKG_RELEASE:=1
+
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=http://www.unix-ag.uni-kl.de/~massar/vpnc/
+PKG_MD5SUM:=604807e7dd90fce00a4e2344ee29c76d
+
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+PKG_INSTALL_DIR:=$(PKG_BUILD_DIR)/ipkg-install
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/vpnc
+  SECTION:=net
+  CATEGORY:=Network
+  DEPENDS:=+libgpg-error +libgcrypt +kmod-tun +ip
+  TITLE:=VPN client for Cisco 3000
+  URL:=http://www.unix-ag.uni-kl.de/~massar/vpnc/
+  SUBMENU:=VPN
+endef
+
+define Package/vpnc/conffiles
+/etc/vpnc/default.conf
+/etc/vpnc/vpnc-script
+endef
+
+define Build/Compile
+	$(call Build/Compile/Default, \
+		OFLAGS="$(TARGET_CFLAGS)" \
+		OS="Linux" \
+		STAGING_DIR="$(STAGING_DIR)" \
+		DESTDIR="$(PKG_INSTALL_DIR)" \
+		PREFIX=/usr \
+		all install \
+	)
+endef
+
+define Package/vpnc/install
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(CP)	$(PKG_INSTALL_DIR)/usr/sbin/vpnc \
+		$(PKG_INSTALL_DIR)/usr/sbin/vpnc-disconnect \
+		$(1)/usr/sbin/
+	install -d -m0700 $(1)/etc/vpnc
+	$(INSTALL_CONF) $(PKG_INSTALL_DIR)/etc/vpnc/default.conf $(1)/etc/vpnc/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/etc/vpnc/vpnc-script $(1)/etc/vpnc/
+endef
+
+$(eval $(call BuildPackage,vpnc))

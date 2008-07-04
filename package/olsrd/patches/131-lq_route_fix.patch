@@ -1,0 +1,12 @@
+--- olsrd-a5b9cf969979.orig/src/lq_route.c      2008-02-06 19:32:49.000000000 +0100
++++ olsrd-a5b9cf969979/src/lq_route.c   2008-04-19 21:08:01.000000000 +0200
+@@ -220,7 +220,8 @@
+     /*
+      * We are not interested in dead-end or dying edges.
+      */
+-    if (!tc_edge->edge_inv || (tc_edge->flags & OLSR_TC_EDGE_DOWN)) {
++    if (!tc_edge->edge_inv ||
++        ((tc_edge->flags | tc_edge->edge_inv->flags) & OLSR_TC_EDGE_DOWN)) {
+ #ifdef DEBUG
+       OLSR_PRINTF(1, "SPF:   ignoring edge %s\n",
+                   olsr_ip_to_string(&buf, &tc_edge->T_dest_addr));

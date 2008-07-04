@@ -1,0 +1,55 @@
+# 
+# Copyright (C) 2007 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
+# $Id: Makefile 9348 2007-10-18 18:37:22Z blogic $
+
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=p910nd
+PKG_VERSION:=0.7
+PKG_RELEASE:=4
+
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE_URL:=http://www.etherboot.org/p910nd
+PKG_MD5SUM:=7bf752532d26c9106f8039db95df3a6b
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/p910nd
+  SECTION:=net
+  CATEGORY:=Network
+  TITLE:=A small non-spooling printer server
+  URL:=http://www.etherboot.org/p910nd/
+  SUBMENU:=printing
+endef
+
+define Package/p910nd/conffiles
+/etc/config/p910nd
+endef
+
+define Package/p910nd/description
+ p910nd is a small daemon that copies any data received on 
+ the port it is listening on to the  corresponding printer 
+ port. It  is primarily intended for diskless Linux hosts 
+ running as printer drivers but there is no reason why it 
+ could  not  be used on diskful hosts. Port 9100 is copied 
+ to /dev/lp0, 9101 to /dev/lp1 and 9102 to /dev/lp2. The 
+ default is port 9100 to /dev/lp0.
+endef
+
+MAKE_FLAGS += \
+	CFLAGS="$(TARGET_CFLAGS) -DLOCKFILE_DIR=\"\\\"/tmp\"\\\""
+
+define Package/p910nd/install
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/sbin/
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DATA) ./files/$(PKG_NAME).conf $(1)/etc/config/$(PKG_NAME)
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/$(PKG_NAME).init $(1)/etc/init.d/$(PKG_NAME)
+endef
+
+$(eval $(call BuildPackage,p910nd))

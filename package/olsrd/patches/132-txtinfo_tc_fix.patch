@@ -1,0 +1,20 @@
+--- olsrd-a5b9cf969979.orig/lib/txtinfo/src/olsrd_txtinfo.c     2008-02-06 19:32:49.000000000 +0100
++++ olsrd-a5b9cf969979/lib/txtinfo/src/olsrd_txtinfo.c  2008-04-28 14:58:32.000000000 +0200
+@@ -384,6 +384,8 @@
+     OLSR_FOR_ALL_TC_ENTRIES(tc) {
+         struct tc_edge_entry *tc_edge;
+         OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
++           if (tc_edge->edge_inv &&
++               ((tc_edge->flags | tc_edge->edge_inv->flags) & OLSR_TC_EDGE_DOWN) == 0) {
+             struct ipaddr_str dstbuf, addrbuf;
+             ipc_sendf( "%s\t%s\t%0.2f\t%0.2f\t%0.2f\n",
+                        olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
+@@ -391,7 +393,7 @@
+                        tc_edge->link_quality,
+                        tc_edge->inverse_link_quality,
+                        olsr_calc_tc_etx(tc_edge));
+-
++            }
+         } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+

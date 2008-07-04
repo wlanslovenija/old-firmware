@@ -1,0 +1,46 @@
+#
+# Copyright (C) 2007 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
+# $Id: Makefile 10111 2008-01-04 05:51:33Z florian $
+
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=strace
+PKG_VERSION:=4.5.16
+PKG_RELEASE:=2
+
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE_URL:=@SF/$(PKG_NAME)
+PKG_MD5SUM:=77f66d09aa82981bb6d65fa19a2c1ba9
+
+PKG_FIXUP = libtool
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/strace
+  SECTION:=utils
+  CATEGORY:=Utilities
+  TITLE:=System call tracer
+  URL:=http://strace.sourceforge.net/
+endef
+
+define Package/strace/description
+	A useful diagnostic, instructional, and debugging tool.
+	Allows you to track what system calls a program makes while it is
+	running.
+endef
+
+define Build/Compile
+	$(MAKE) -C $(PKG_BUILD_DIR) \
+		CC="$(TARGET_CC)"
+endef
+
+define Package/strace/install
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/sbin/
+endef
+
+$(eval $(call BuildPackage,strace))

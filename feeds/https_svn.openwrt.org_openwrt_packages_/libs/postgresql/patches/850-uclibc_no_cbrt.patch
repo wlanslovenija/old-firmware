@@ -1,0 +1,24 @@
+Index: postgresql-8.3.0/src/backend/utils/adt/float.c
+===================================================================
+--- postgresql-8.3.0.orig/src/backend/utils/adt/float.c	2008-01-01 13:45:52.000000000 -0600
++++ postgresql-8.3.0/src/backend/utils/adt/float.c	2008-02-06 16:30:02.000000000 -0600
+@@ -71,7 +71,9 @@
+ static int	float8_cmp_internal(float8 a, float8 b);
+ 
+ #ifndef HAVE_CBRT
+-static double cbrt(double x);
++#undef cbrt
++#define cbrt(x) pg_cbrt(x)
++static double pg_cbrt(double x);
+ #endif   /* HAVE_CBRT */
+ 
+ 
+@@ -2733,7 +2735,7 @@
+ #ifndef HAVE_CBRT
+ 
+ static double
+-cbrt(double x)
++pg_cbrt(double x)
+ {
+ 	int			isneg = (x < 0.0);
+ 	double		absx = fabs(x);
