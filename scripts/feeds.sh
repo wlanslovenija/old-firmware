@@ -34,18 +34,6 @@ setup_symlinks() {
 	done
 }
 
-checkout_feed() {
-	# We ensure the feed has not already been checked out, if so, we just update the source feed
-	if [ -d $FEEDS_DIR/$2 ]; then
-		svn up ${3:+-r$3} $FEEDS_DIR/$2
-		echo "Updated to revision $(LANG=C svn info $FEEDS_DIR/$2 | awk '/^Revision:/ { print $2 }' )";
-	# Otherwise, we have to checkout in the $FEEDS_DIR 
-	else
-		svn co ${3:+-r$3} $1 $FEEDS_DIR/$2
-		echo "Checked out revision $(LANG=C svn info $FEEDS_DIR/$2 | awk '/^Revision:/ { print $2 }' )";
-	fi
-}
-
 extract_feed_name() {
 	# We extract the last name of the URL, maybe we should rename this as domain.tld.repository.name
 	echo "$(echo $1 | sed -e "s/[^A-Za-z\.]\+/_/g")"
@@ -53,11 +41,5 @@ extract_feed_name() {
 
 # We can delete symlinks every time we start this script, since modifications have been made in the $FEEDS_DIR anyway
 delete_symlinks "$PACKAGE_DIR"
-# Now let's checkout feeds
-for feed in $1
-do
-	name=$(extract_feed_name "$feed")
-	checkout_feed "$feed" "$name" "$2"
-done
 # Finally setup symlinks
 setup_symlinks "$FEEDS_DIR" "$PACKAGE_DIR"
