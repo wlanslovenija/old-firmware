@@ -1,132 +1,171 @@
 #!/bin/sh /etc/rc.common
-# Copyright (C) 2006 OpenWrt.org
 
-## Please make changes in /etc/firewall.user
 START=45
 start() {
 	include /lib/network
 	scan_interfaces
 	config_load /var/state/network
 	
-	config_get WAN wan ifname
-	config_get WANDEV wan device
-	config_get LAN lan ifname
+	config_get WIFI_IF subnet0 ifname
+	config_get MESH_IF mesh ifname
+	config_get LAN_IF lan ifname
+	config_get LANMESH_IF lanmesh ifname
+	config_get WAN_IF wan ifname
+	config_get FALLBACK_IF fallback ifname
 	
-	## CLEAR TABLES
-	for T in filter nat; do
-		iptables -t $T -F
-		iptables -t $T -X
-	done
+	config_get WIFI_ADDR subnet0 ipaddr
+	config_get LAN_ADDR lan ipaddr
+	config_get FALLBACK_ADDR fallback ipaddr
 	
-	iptables -N input_rule
-	iptables -N input_wan
-	iptables -N output_rule
-	iptables -N forwarding_rule
-	iptables -N forwarding_wan
-
-	iptables -t nat -N NEW
-	iptables -t nat -N prerouting_rule
-	iptables -t nat -N prerouting_wan
-	iptables -t nat -N postrouting_rule
+	config_get WIFI_MASK subnet0 netmask
+	config_get LAN_MASK lan netmask
+	config_get FALLBACK_MASK fallback netmask
 	
-	iptables -N LAN_ACCEPT
-	[ -z "$WAN" ] || iptables -A LAN_ACCEPT -i "$WAN" -j RETURN
-	[ -z "$WANDEV" -o "$WANDEV" = "$WAN" ] || iptables -A LAN_ACCEPT -i "$WANDEV" -j RETURN
-	iptables -A LAN_ACCEPT -j ACCEPT
+	WIFI_DEV=${WIFI_IF%%:*}
+	MESH_DEV=${MESH_IF%%:*}
+	LAN_DEV=${LAN_IF%%:*}
+	LANMESH_DEV=${LANMESH_IF%%:*}
+	WAN_DEV=${WAN_IF%%:*}
+	FALLBACK_DEV=${FALLBACK_IF%%:*}
+	VPN_DEV="tap+"
 	
-	### INPUT
-	###  (connections with the router as destination)
+	WIFI_IN="-i $WIFI_DEV -s $WIFI_ADDR/$WIFI_MASK"
+	MESH_IN="-i $MESH_DEV -s ! $WIFI_ADDR/$WIFI_MASK"
+	LAN_IN="-i $LAN_DEV -s $LAN_ADDR/$LAN_MASK"
+	[ -n "$LAN_IF" ] && LANMESH_IN="-i $LANMESH_DEV -s ! $LAN_ADDR/$LAN_MASK" || LANMESH_IN="-i $LANMESH_DEV"
+	WAN_IN="-i $WAN_DEV -s ! $FALLBACK_ADDR/$FALLBACK_MASK"
+	FALLBACK_IN="-i $FALLBACK_DEV -s $FALLBACK_ADDR/$FALLBACK_MASK"
+	VPN_IN="-i $VPN_DEV"
 	
-	# base case
+	WAN_OUT="-o $WAN_DEV -d ! $FALLBACK_ADDR/$FALLBACK_MASK"
+	
+	VPN_HOST1="193.164.137.78"
+	VPN_HOST2="91.185.199.246"
+	VPN_PORT="9999"
+		
+	# Clears everything, INPUT & OUTPUT policy ACCEPT, FORWARD policy DROP
+	stop
+	
+	### INPUT ###
+	
 	iptables -P INPUT DROP
+	
 	iptables -A INPUT -m state --state INVALID -j DROP
-	iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
-	iptables -A INPUT -p tcp --tcp-flags SYN SYN --tcp-option \! 2 -j  DROP
+	iptables -A INPUT -p tcp --tcp-flags SYN SYN --tcp-option \! 2 -j DROP
 	
-	#
-	# insert accept rule or to jump to new accept-check table here
-	#
-	iptables -A INPUT -j input_rule
-	[ -z "$WAN" ] || iptables -A INPUT -i $WAN -j input_wan
+	iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+	iptables -A INPUT -i lo -j ACCEPT
+	iptables -A INPUT $FALLBACK_IN -j ACCEPT
 	
-	# allow
-	iptables -A INPUT -j LAN_ACCEPT	# allow from lan/wifi interfaces 
-	iptables -A INPUT -p icmp	-j ACCEPT	# allow ICMP
-	iptables -A INPUT -p gre	-j ACCEPT	# allow GRE
+	# Allows node SSH from anywhere
+	iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 	
-	# reject (what to do with anything not allowed earlier)
-	iptables -A INPUT -p tcp -j REJECT --reject-with tcp-reset
-	iptables -A INPUT -j REJECT --reject-with icmp-port-unreachable
+	# Allows node HTTP from anywhere except wan
+	[ -n "$WAN_IF" ] && iptables -A INPUT $WAN_IN -p tcp --dport 80 -j REJECT --reject-with icmp-net-prohibited
+	iptables -A INPUT -p tcp --dport 80 -j ACCEPT
 	
-	### OUTPUT
-	### (connections with the router as source)
+	# Allows node DNS from anywhere except wan
+	[ -n "$WAN_IF" ] && iptables -A INPUT $WAN_IN -p tcp --dport 53 -j REJECT --reject-with icmp-net-prohibited
+	[ -n "$WAN_IF" ] && iptables -A INPUT $WAN_IN -p udp --dport 53 -j REJECT --reject-with icmp-net-prohibited
+	iptables -A INPUT -p tcp --dport 53 -j ACCEPT
+	iptables -A INPUT -p udp --dport 53 -j ACCEPT
 	
-	# base case
-	iptables -P OUTPUT DROP
-	iptables -A OUTPUT -m state --state INVALID -j DROP
-	iptables -A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+	# Allows captive portal
+	iptables -A INPUT $WIFI_IN -p tcp --dport 2050 -j ACCEPT
 	
-	#
-	# insert accept rule or to jump to new accept-check table here
-	#
-	iptables -A OUTPUT -j output_rule
+	# Allows DHCP (broadcast)
+	iptables -A INPUT -i $WIFI_DEV -p udp --sport 68 --dport 67 -j ACCEPT
+	[ -n "$LAN_IF" ] && iptables -A INPUT -i $LAN_DEV -p udp --sport 68 --dport 67 -j ACCEPT
 	
-	# allow
-	iptables -A OUTPUT -j ACCEPT		#allow everything out
+	# Allows OLSR (broadcast)
+	iptables -A INPUT $MESH_IN -p udp --dport 698 -j ACCEPT
+	[ -n "$LANMESH_IF" ] && iptables -A INPUT $LANMESH_IN -p udp --dport 698 -j ACCEPT
+	iptables -A INPUT $VPN_IN -p udp --dport 698 -j ACCEPT
 	
-	# reject (what to do with anything not allowed earlier)
-	iptables -A OUTPUT -p tcp -j REJECT --reject-with tcp-reset
-	iptables -A OUTPUT -j REJECT --reject-with icmp-port-unreachable
+	# Allows useful ICMP (like ping)
+	iptables -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
+	iptables -A INPUT -p icmp --icmp-type destination-unreachable -j ACCEPT
+	iptables -A INPUT -p icmp --icmp-type source-quench -j ACCEPT
+	iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+	iptables -A INPUT -p icmp --icmp-type time-exceeded -j ACCEPT
+	iptables -A INPUT -p icmp --icmp-type parameter-problem -j ACCEPT
 	
-	### FORWARDING
-	### (connections routed through the router)
+	# Allows traceroute
+	iptables -A INPUT -p udp --sport 32769:65535 --dport 33434:33523 -j ACCEPT
+	iptables -A INPUT -p icmp --icmp-type 30 -j ACCEPT
 	
-	# base case
-	iptables -P FORWARD DROP 
+	### FORWARD ###
+	
+	iptables -P FORWARD DROP
+	
 	iptables -A FORWARD -m state --state INVALID -j DROP
-	iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-	iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+	iptables -A FORWARD -p tcp --tcp-flags SYN SYN --tcp-option \! 2 -j DROP
+	iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+	iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
 	
-	#
-	# insert accept rule or to jump to new accept-check table here
-	#
-	iptables -A FORWARD -j forwarding_rule
-	[ -z "$WAN" ] || iptables -A FORWARD -i $WAN -j forwarding_wan
+	# Disallows routing OLSR packets in a network
+	iptables -A FORWARD -p udp --dport 698 -j DROP
 	
-	# allow
-	iptables -A FORWARD -i $LAN -o $LAN -j ACCEPT
-	[ -z "$WAN" ] || iptables -A FORWARD -i $LAN -o $WAN -j ACCEPT
+	# Disallows routing DHCP packets in a network
+	iptables -A FORWARD -p udp --dport 67 -j DROP
+	iptables -A FORWARD -p udp --sport 68 -j DROP
 	
-	# reject (what to do with anything not allowed earlier)
-	# uses the default -P DROP
+	# Disallows VPN connections to our VPN servers in a network
+	iptables -A FORWARD -p tcp -d $VPN_HOST1 --dport $VPN_PORT -j REJECT --reject-with icmp-net-prohibited
+	iptables -A FORWARD -p udp -d $VPN_HOST1 --dport $VPN_PORT -j REJECT --reject-with icmp-net-prohibited
+	iptables -A FORWARD -p tcp -d $VPN_HOST2 --dport $VPN_PORT -j REJECT --reject-with icmp-net-prohibited
+	iptables -A FORWARD -p udp -d $VPN_HOST2 --dport $VPN_PORT -j REJECT --reject-with icmp-net-prohibited
 	
-	### MASQ
-	iptables -t nat -A PREROUTING -m state --state NEW -p tcp -j NEW 
-	iptables -t nat -A PREROUTING -j prerouting_rule
-	[ -z "$WAN" ] || iptables -t nat -A PREROUTING -i "$WAN" -j prerouting_wan
-	iptables -t nat -A POSTROUTING -j postrouting_rule
-	[ -z "$WAN" ] || iptables -t nat -A POSTROUTING -o $WAN -j MASQUERADE
-
-	iptables -t nat -A NEW -m limit --limit 50 --limit-burst 100 -j RETURN && \
-		iptables -t nat -A NEW -j DROP
-
-	## USER RULES
-	[ -f /etc/firewall.user ] && . /etc/firewall.user
-	[ -n "$WAN" -a -e /etc/config/firewall ] && {
-		export WAN
-		awk -f /usr/lib/common.awk -f /usr/lib/firewall.awk /etc/config/firewall | ash
-	}
-}
-
-stop() {
-	iptables -P INPUT ACCEPT
+	# Disallows routing from or to a wan segment
+	[ -n "$WAN_IF" ] && iptables -A FORWARD -m state --state NEW $WAN_IN -j DROP
+	[ -n "$WAN_IF" ] && iptables -A FORWARD -m state --state NEW $WAN_OUT -j DROP
+	
+	# Allows routing inside other segments
+	iptables -A FORWARD -m state --state NEW -j ACCEPT
+	
+	### OUPUT ###
+	
 	iptables -P OUTPUT ACCEPT
-	iptables -P FORWARD ACCEPT
-	iptables -F
-	iptables -X
+	
+	# Allows VPN connections from the router only through wan or fallback
+	[ -n "$WAN_IF" ] && iptables -A OUTPUT -o $WAN_DEV -p tcp -d $VPN_HOST1 --dport $VPN_PORT -j ACCEPT
+	[ -n "$WAN_IF" ] && iptables -A OUTPUT -o $WAN_DEV -p tcp -d $VPN_HOST2 --dport $VPN_PORT -j ACCEPT
+	[ -n "$WAN_IF" ] && iptables -A OUTPUT -o $WAN_DEV -p udp -d $VPN_HOST1 --dport $VPN_PORT -j ACCEPT
+	[ -n "$WAN_IF" ] && iptables -A OUTPUT -o $WAN_DEV -p udp -d $VPN_HOST2 --dport $VPN_PORT -j ACCEPT
+	iptables -A OUTPUT -o $FALLBACK_DEV -p tcp -d $VPN_HOST1 --dport $VPN_PORT -j ACCEPT
+	iptables -A OUTPUT -o $FALLBACK_DEV -p tcp -d $VPN_HOST2 --dport $VPN_PORT -j ACCEPT
+	iptables -A OUTPUT -o $FALLBACK_DEV -p udp -d $VPN_HOST1 --dport $VPN_PORT -j ACCEPT
+	iptables -A OUTPUT -o $FALLBACK_DEV -p udp -d $VPN_HOST2 --dport $VPN_PORT -j ACCEPT
+	iptables -A OUTPUT -p tcp -d $VPN_HOST1 --dport $VPN_PORT -j REJECT --reject-with icmp-net-prohibited
+	iptables -A OUTPUT -p tcp -d $VPN_HOST2 --dport $VPN_PORT -j REJECT --reject-with icmp-net-prohibited
+	iptables -A OUTPUT -p udp -d $VPN_HOST1 --dport $VPN_PORT -j REJECT --reject-with icmp-net-prohibited
+	iptables -A OUTPUT -p udp -d $VPN_HOST2 --dport $VPN_PORT -j REJECT --reject-with icmp-net-prohibited
+	
+	### ROUTING ###
+			
+	iptables -t mangle -A PREROUTING -d $VPN_HOST1 -j MARK --or-mark 0x100000
+	iptables -t mangle -A PREROUTING -d $VPN_HOST2 -j MARK --or-mark 0x100000
+	
+	echo 1 > /proc/sys/net/ipv4/ip_forward
+}
+stop() {
+	echo 0 > /proc/sys/net/ipv4/ip_forward
+	
+	iptables -t filter -P INPUT ACCEPT
+	iptables -t filter -P OUTPUT ACCEPT
+	iptables -t filter -P FORWARD DROP
+	iptables -t filter -F
+	iptables -t filter -X
 	iptables -t nat -P PREROUTING ACCEPT
 	iptables -t nat -P POSTROUTING ACCEPT
 	iptables -t nat -P OUTPUT ACCEPT
 	iptables -t nat -F
 	iptables -t nat -X
+	iptables -t mangle -P PREROUTING ACCEPT
+	iptables -t mangle -P OUTPUT ACCEPT
+	iptables -t mangle -P INPUT ACCEPT
+	iptables -t mangle -P FORWARD ACCEPT
+	iptables -t mangle -P POSTROUTING ACCEPT
+	iptables -t mangle -F
+	iptables -t mangle -X
 }

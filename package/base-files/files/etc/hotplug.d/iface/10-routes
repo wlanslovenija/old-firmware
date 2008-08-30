@@ -10,28 +10,28 @@ add_route() {
 	config_get dev "$interface" ifname
 
 	config_get target "$config" target
-	config_get netmask "$config" netmask
 	config_get gateway "$config" gateway
 	config_get metric "$config" metric
+	config_get table "$config" table
 
-	# make sure there is a gateway and a target
 	[ -n "$target" ] || {
 		echo "Missing target in route section $config"
 		return 1
 	}
-  [ "$gateway" = "auto" ] && {
-  	config_get gateway "$interface" gateway
-  }
-	[ -n "$gateway" ] || {
-		echo "Missing gateway in route section $config"
-		return 1
+
+	[ "$gateway" = "auto" ] && {
+		config_get gateway "$interface" gateway
 	}
 
-	netmask="${netmask:-255.255.255.255}"
-	dest="${netmask:+-net "$target" netmask "$netmask"}"
-	dest="${dest:--host "$target"}"
-	
-	/sbin/route add $dest gw "$gateway" ${dev:+dev "$dev"} ${metric:+ metric "$metric"}
+	wasnetwork=0
+	[ "$target" = "network" ] && {
+		config_get ipaddr "$interface" ipaddr
+		config_get netmask "$interface" netmask
+		target=`ipcalc.sh "$ipaddr" "$netmask" | grep NETWORK | cut -d "=" -f 2`/`ipcalc.sh "$ipaddr" "$netmask" | grep PREFIX | cut -d "=" -f 2`
+		wasnetwork=1
+	}
+
+	/usr/sbin/ip route add $target ${gateway:+via "$gateway"} ${dev:+dev "$dev"} ${metric:+metric "$metric"} ${table:+table "$table"}
 }
 
 case "$ACTION" in
