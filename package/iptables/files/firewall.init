@@ -81,6 +81,7 @@ start() {
 	iptables -A INPUT $MESH_IN -p udp --dport 698 -j ACCEPT
 	[ -n "$LANMESH_IF" ] && iptables -A INPUT $LANMESH_IN -p udp --dport 698 -j ACCEPT
 	iptables -A INPUT $VPN_IN -p udp --dport 698 -j ACCEPT
+	iptables -A INPUT $LAN_IN -p udp --dport 698 -j ACCEPT
 	
 	# Allows useful ICMP (like ping)
 	iptables -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
