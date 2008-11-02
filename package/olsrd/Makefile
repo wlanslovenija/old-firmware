@@ -17,7 +17,7 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-a5b9cf969979/
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_REAL_VERSION).tar.bz2
 PKG_SOURCE_URL:=http://www.olsr.org/releases/0.5
 PKG_MD5SUM:=bd1cd216c318c1359ab6e832adbb1962
-
+PKG_PLUGINS_DIR?=./plugins
 PKG_INSTALL_DIR:=$(PKG_BUILD_DIR)/ipkg-install
 
 include $(INCLUDE_DIR)/package.mk
@@ -92,6 +92,8 @@ endef
 define Build/Compile
 	rm -rf $(PKG_INSTALL_DIR)
 	mkdir -p $(PKG_INSTALL_DIR)
+	rm -rf $(PKG_BUILD_DIR)/lib/actions
+	cp -r $(PKG_PLUGINS_DIR)/actions $(PKG_BUILD_DIR)/lib/actions
 	$(MAKE) -C "$(PKG_BUILD_DIR)" \
 		$(TARGET_CONFIGURE_OPTS) \
 		NODEBUG=1 \
@@ -104,7 +106,7 @@ define Build/Compile
 		MANDIR="$(PKG_INSTALL_DIR)/usr/share/man" \
 		STRIP="true" \
 		INSTALL_LIB="true" \
-		SUBDIRS="bmf dot_draw dyn_gw httpinfo nameservice secure txtinfo" \
+		SUBDIRS="bmf dot_draw dyn_gw httpinfo nameservice secure txtinfo actions" \
 		all libs install install_libs
 endef
 
@@ -115,6 +117,8 @@ define Package/olsrd/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/olsrd $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/olsrd.init $(1)/etc/init.d/olsrd
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lib/actions/olsrd_actions.so.* $(1)/usr/lib/
 endef
 
 define Package/olsrd-mod-dot-draw/install
