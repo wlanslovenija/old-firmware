@@ -30,6 +30,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
@@ -46,9 +47,9 @@ static export_route_function orig_addroute_function;
 static export_route_function orig_delroute_function;
 
 /* NOTE: Code depends on there only being two operations that
- * are opposite each other (so if route flapping ocurrs within
+ * are opposite each other (so if route flapping occurs within
  * the designated interval, actions will cancel out and no mass
- * executions will ocurr).
+ * executions will occur).
  *
  * So... don't change this ;)
  */
@@ -58,14 +59,12 @@ enum action_type {
 };
 
 struct action_queue {
-  int trigger_id;
-  char *script;
+  struct trigger_list *trigger;
   int type;
   struct action_queue *next;
 };
 
 struct trigger_list {
-  int trigger_id;
   struct in_addr trigger_addr;
   char *script;
   struct trigger_list *next;
@@ -74,7 +73,6 @@ struct trigger_list {
 static struct {
   struct trigger_list *triggers;
   struct action_queue *aq;
-  int last_trigger_id;
 } actions_conf;
 
 /* Forward declarations */
@@ -120,7 +118,6 @@ void add_trigger(const char *addr, const char *script)
   struct trigger_list *entry;
   
   entry = (struct trigger_list*) malloc(sizeof(struct trigger_list));
-  entry->trigger_id = actions_conf.last_trigger_id++;
   entry->script = (char*) script;
   inet_aton(addr, &entry->trigger_addr);
   entry->next = actions_conf.triggers;
@@ -130,16 +127,18 @@ void add_trigger(const char *addr, const char *script)
 /**
  * Executes the given script.
  *
- * @param script Script path
+ * @param trigger Trigger data struct
+ * @param type Action type
  */
-void execute_script(const char *script, int type)
+void execute_script(const struct trigger_list *trigger, const int type)
 {
   if (fork() == 0) {
     /* Scripts get passed the following arguments:
      *  $0 - Script path
      *  $1 - Operation ('add' or 'del') that ocurred
+     *  $2 - Routing entry which has been added or deleted
      */
-    execl(script, script, type == RT_ADD ? "add" : "del", (char*) NULL);
+    execl(trigger->script, trigger->script, type == RT_ADD ? "add" : "del", inet_ntoa(trigger->trigger_addr), (char*) NULL);
   }
 }
 
@@ -147,17 +146,16 @@ void execute_script(const char *script, int type)
  * Queues script execution for a later interval if the same script
  * is not already scheduled to be executed.
  *
- * @param trigger_id Route identifier
+ * @param trigger Trigger data struct
  * @param type Action type
- * @param script Script path
  */
-void queue_execute_script(int trigger_id, int type, const char *script)
+void queue_execute_script(const struct trigger_list *trigger, const int type)
 {
   /* See if this script has already been scheduled for execution */
   struct action_queue *entry = actions_conf.aq;
   struct action_queue *prev = 0;
   while (entry) {
-    if (entry->trigger_id == trigger_id && type != entry->type) {
+    if (entry->trigger == trigger && type != entry->type) {
       /* Reverse operation already scheduled, so we should actually
        * do nothing at all - remove the op. */
       if (prev)
@@ -167,7 +165,7 @@ void queue_execute_script(int trigger_id, int type, const char *script)
       
       free(entry);
       return;
-    } else if (entry->trigger_id == trigger_id && type == entry->type) {
+    } else if (entry->trigger == trigger && type == entry->type) {
       /* How can this be ? */
       return;
     }
@@ -178,9 +176,8 @@ void queue_execute_script(int trigger_id, int type, const char *script)
   
   /* Create new entry in the queue */
   entry = (struct action_queue*) malloc(sizeof(struct action_queue));
-  entry->trigger_id = trigger_id;
+  entry->trigger = trigger;
   entry->type = type;
-  entry->script = (char*) script;
   entry->next = actions_conf.aq;
   actions_conf.aq = entry;
 }
@@ -193,7 +190,7 @@ void actions_execute_queued(void *foo __attribute__((unused)))
   struct action_queue *entry = actions_conf.aq;
   struct action_queue *tmp;
   while (entry) {
-    execute_script(entry->script, entry->type);
+    execute_script(entry->trigger, entry->type);
     tmp = entry->next;
     free(entry);
     entry = tmp;
@@ -216,7 +213,7 @@ void find_and_exec_trigger(int type, const struct rt_entry *r)
   while (entry) {
     /* If any actions are configured for this route, execute the script */
     if (r->rt_dst.prefix.v4.s_addr == entry->trigger_addr.s_addr) {
-      queue_execute_script(entry->trigger_id, type, entry->script);
+      queue_execute_script(entry, type);
       break;
     }
 
@@ -264,7 +261,6 @@ static void my_fini(void) __attribute__ ((destructor));
  */
 static void my_init(void)
 {
-  actions_conf.last_trigger_id = 0;
   actions_conf.aq = 0;
   actions_conf.triggers = 0;
 }
