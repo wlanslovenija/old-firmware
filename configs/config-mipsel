@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # OpenWrt version: 7.09 (Kamikaze)
-# Tue Apr 29 22:36:36 2008
+# Sat Dec  6 22:28:46 2008
 #
 CONFIG_HAVE_DOT_CONFIG=y
 # CONFIG_LINUX_2_6_AMCC is not set
@@ -694,6 +694,7 @@ CONFIG_BUSYBOX_CONFIG_LOGGER=y
 # CONFIG_BUSYBOX_CONFIG_ENVUIDGID is not set
 # CONFIG_BUSYBOX_CONFIG_ENVDIR is not set
 # CONFIG_BUSYBOX_CONFIG_SOFTLIMIT is not set
+CONFIG_PACKAGE_cronscripts=y
 CONFIG_PACKAGE_dnsmasq=y
 CONFIG_PACKAGE_dropbear=y
 CONFIG_PACKAGE_iptables=y
@@ -1604,7 +1605,7 @@ CONFIG_DEFAULT_nvram=y
 # CONFIG_PACKAGE_haserl is not set
 # CONFIG_PACKAGE_hdparm is not set
 # CONFIG_PACKAGE_heyu is not set
-# CONFIG_PACKAGE_hotplug2 is not set
+CONFIG_PACKAGE_hotplug2=y
 # CONFIG_PACKAGE_huaweiaktbbo is not set
 # CONFIG_PACKAGE_io is not set
 # CONFIG_PACKAGE_jpeg-tools is not set
@@ -1642,6 +1643,7 @@ CONFIG_PACKAGE_nvram=y
 # CONFIG_PACKAGE_setpwc is not set
 # CONFIG_PACKAGE_shfs-utils is not set
 # CONFIG_PACKAGE_smartmontools is not set
+CONFIG_PACKAGE_solar=y
 # CONFIG_PACKAGE_strace is not set
 # CONFIG_PACKAGE_swap-utils is not set
 # CONFIG_PACKAGE_tar is not set
