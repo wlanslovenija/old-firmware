@@ -94,7 +94,7 @@ int openserialport() {
 	cfsetspeed(&params, baud);
 
 	// 8 bit data, one stop bit, RTS/CTS flow control
-	params.c_cflag = CLOCAL | CREAD | CS8 | HUPCL | CRTSCTS | CCTS_OFLOW | CRTS_IFLOW;
+	params.c_cflag = CLOCAL | CREAD | CS8 | HUPCL | CRTSCTS;
 
 	if (tcsetattr(fd, TCSANOW, &params) == -1) return -1;
 
