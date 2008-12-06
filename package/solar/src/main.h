@@ -16,7 +16,8 @@ typedef struct {
 
 extern int plain_output;
 
-int help(int help);
+int help(int fd);
+int version(int fd);
 void printhelp(FILE *output);
 void lockwait(int signal);
 int openserialport();

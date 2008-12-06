@@ -16,7 +16,7 @@ int long_push(int fd);
 int short_push(int fd);
 
 int pli_test(int fd);
-int pli_version(int fd);
+int pli_plversion(int fd);
 int pli_getday(int fd);
 int pli_gettime(int fd);
 int pli_setdaytime(int fd);
@@ -26,6 +26,8 @@ int pli_solvoltage(int fd);
 int pli_charge(int fd);
 int pli_load(int fd);
 int pli_state(int fd);
+int pli_save(int fd);
+int pli_restore(int fd);
 int pli_powercycle(int fd);
 
 #endif /* PLI_H_ */

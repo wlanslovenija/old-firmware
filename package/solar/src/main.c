@@ -10,8 +10,10 @@
 #include "main.h"
 #include "pli.h"
 
+#define VERSION "0.1"
 #define DEFAULT_DEVICE_FILE "/dev/ttyS0"
 #define DEFAULT_BAUD B9600
+#define DEFAULT_BAUD_NAME 9600
 #define DEFAULT_INTERFACE "pli"
 #define LOCK_WAIT 10
 
@@ -28,6 +30,7 @@ interface interfaces[] = {
 int help(int fd) {
 	if ((plain_output != 0) && (iface->name != NULL)) {
 		fprintf(stdout, "help\n");
+		fprintf(stdout, "version\n");
 		command *j;
 		for (j = iface->commands; j->name != NULL; j++) {
 			fprintf(stdout, "%s\n", j->name);
@@ -39,11 +42,16 @@ int help(int fd) {
 	return 0;
 }
 
+int version(int fd) {
+	fprintf(stdout, "%s%s\n", ((plain_output != 0) ? "" : "Version: "), VERSION);
+	return 0;
+}
+
 void printhelp(FILE *output) {
 	fprintf(output, "solar[.<iface>] [-s] [-d <device>] [-b <baud>] <command>\n");
-	fprintf(output, "  -p           plain (just values) output");
+	fprintf(output, "  -p           plain (just values) output\n");
 	fprintf(output, "  -d <device>  use <device> as a serial port device file (default: %s)\n", DEFAULT_DEVICE_FILE);
-	fprintf(output, "  -b <baud>    communicate with <baud> baud over a serial port (default: %d)\n", DEFAULT_BAUD);
+	fprintf(output, "  -b <baud>    communicate with <baud> baud over a serial port (default: %d)\n", DEFAULT_BAUD_NAME);
 	fprintf(output, "\n");
 	fprintf(output, "  <iface>    which interface to use (default: %s, possible:", DEFAULT_INTERFACE);
 	interface *i;
@@ -59,7 +67,7 @@ void printhelp(FILE *output) {
 	else {
 		fprintf(output, "  <command>  command of '%s' interface to execute (possible commands bellow)\n", iface->name);
 	}
-	int maxname = 4;
+	int maxname = 7;
 	if (iface->name != NULL) {
 		command *j;
 		for (j = iface->commands; j->name != NULL; j++) {
@@ -68,6 +76,7 @@ void printhelp(FILE *output) {
 	}
 	fprintf(output, "\n");
 	fprintf(output, "  %-*s  %s\n", maxname, "help", "display this help");
+	fprintf(output, "  %-*s  %s %s\n", maxname, "version", "display version of this program, that is", VERSION);
 	if (iface->name != NULL) {
 		command *j;
 		for (j = iface->commands; j->name != NULL; j++) {
@@ -249,6 +258,9 @@ int main(int argc, char *argv[]) {
 				if (strcmp(argv[i], "help") == 0) {
 					c = help;
 				}
+				else if (strcmp(argv[i], "version") == 0) {
+					c = version;
+				}
 				else {
 					fprintf(stderr, "Unsupported command '%s' of interface '%s'.\n\n", argv[i], iface->name);
 					printhelp(stderr);
@@ -265,14 +277,14 @@ int main(int argc, char *argv[]) {
 	}
 
 	int fd;
-	if ((c != help) && ((fd = openserialport()) == -1)) {
+	if ((c != help) && (c != version) && ((fd = openserialport()) == -1)) {
 		fprintf(stderr, "Unable to open serial port device file '%s': %s.\n", device, strerror(errno));
 		return 2;
 	}
 
 	int ret = c(fd);
 
-	if ((c != help) && (close(fd) == -1)) {
+	if ((c != help) && (c != version) && (close(fd) == -1)) {
 		fprintf(stderr, "Unable to close serial port device file '%s': %s.\n", device, strerror(errno));
 		return 2;
 	}

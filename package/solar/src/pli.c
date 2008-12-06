@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+#include <fcntl.h>
 
 #include "pli.h"
 #include "main.h"
@@ -14,10 +15,13 @@
 #define LDEL 10 // 1 min
 #define INTLOAD_DIV 10.0 // PL20/PL40 = 10.0, PL60 = 5.0
 #define INTCHARGE_DIV 10.0  // PL20 = 10.0, PL40 = 5.0, PL60 = 2.5
+#define CONFIGURATION_START 0x0E
+#define CONFIGURATION_END 0x2C
+#define CONFIGURATION_SIZE (CONFIGURATION_END - CONFIGURATION_START + 1)
 
 command pli_commands[] = {
 	{"test", "loopback test connection to PLI", pli_test},
-	{"version", "get PL software version number", pli_version},
+	{"plversion", "get PL software version", pli_plversion},
 	{"getday", "get current day in a month", pli_getday},
 	{"gettime", "get current time", pli_gettime},
 	{"setdaytime", "set current day and time from local time on this system", pli_setdaytime},
@@ -27,6 +31,8 @@ command pli_commands[] = {
 	{"charge", "get current charging current", pli_charge},
 	{"load", "get current load current", pli_load},
 	{"state", "get current regulator state", pli_state},
+	{"save", "save current configuration to 'solar.conf'", pli_save},
+	{"restore", "restore configuration from 'solar.conf'", pli_restore},
 	//{"powercycle", "powercycle load (switch power off and the back on)", pli_powercycle}, not really working (it does not turn the load back on)
 	{NULL, NULL}
 };
@@ -65,7 +71,7 @@ int read_buffer(int fd, unsigned char *buffer, int size) {
 	int i = 0;
 	int r = 0;
 
-	if ((count = read(fd, buffer + r, size - r)) != size - r) {
+	while ((count = read(fd, buffer + r, size - r)) != size - r) {
 		if (count == -1) {
 			fprintf(stderr, "Could not read response: %s.\n", strerror(errno));
 			return 2;
@@ -187,7 +193,7 @@ int pli_test(int fd) {
 	}
 }
 
-int pli_version(int fd) {
+int pli_plversion(int fd) {
 	int version;
 	if ((version = read_processor(fd, 0x00)) == -1) {
 		return 3;
@@ -328,6 +334,86 @@ int pli_state(int fd) {
 			break;
 	}
 	fprintf(stdout, "%s%s\n", ((plain_output != 0) ? "" : "Regulator state: "), state);
+	return 0;
+}
+
+int pli_save(int fd) {
+	unsigned char buffer[CONFIGURATION_SIZE];
+	int i;
+	int val;
+	for (i = CONFIGURATION_START; i <= CONFIGURATION_END; i++) {
+		if ((val = read_eprom(fd, i)) == -1) return 3;
+		buffer[i - CONFIGURATION_START] = val;
+	}
+
+	int file;
+	if ((file = open("solar.conf", O_WRONLY | O_CREAT | O_TRUNC, 0644)) == -1) {
+		fprintf(stderr, "Could not open configuration file 'solar.conf': %s.\n", strerror(errno));
+		return 2;
+	}
+
+	int count;
+	int w = 0;
+
+	while ((count = write(file, buffer + w, sizeof(buffer) - w)) != sizeof(buffer) - w) {
+		if (count == -1) {
+			fprintf(stderr, "Could not write configuration file 'solar.conf': %s.\n", strerror(errno));
+			return 2;
+		}
+		else if (i < RETRY) {
+			w =+ count;
+			i++;
+		}
+		else {
+			fprintf(stderr, "Could not write complete configuration file 'solar.conf'.\n");
+			return 2;
+		}
+	}
+
+	if (close(file) == -1) {
+		fprintf(stderr, "Unable to close configuration file 'solar.conf': %s.\n", strerror(errno));
+		return 2;
+	}
+
+	return 0;
+}
+
+int pli_restore(int fd) {
+	int file;
+	if ((file = open("solar.conf", O_RDONLY)) == -1) {
+		fprintf(stderr, "Could not open configuration file 'solar.conf': %s.\n", strerror(errno));
+		return 2;
+	}
+
+	unsigned char buffer[CONFIGURATION_SIZE];
+	int count;
+	int i = 0;
+	int r = 0;
+
+	while ((count = read(file, buffer + r, sizeof(buffer) - r)) != sizeof(buffer) - r) {
+		if (count == -1) {
+			fprintf(stderr, "Could not read configuration file 'solar.conf': %s.\n", strerror(errno));
+			return 2;
+		}
+		else if (i < RETRY) {
+			r += count;
+			i++;
+		}
+		else {
+			fprintf(stderr, "Could not read complete configuration file 'solar.conf'.\n");
+			return 2;
+		}
+	}
+
+	if (close(file) == -1) {
+		fprintf(stderr, "Unable to close configuration file 'solar.conf': %s.\n", strerror(errno));
+		return 2;
+	}
+
+	for (i = CONFIGURATION_START; i <= CONFIGURATION_END; i++) {
+		if (write_eprom(fd, i, buffer[i - CONFIGURATION_START]) == -1) return 3;
+	}
+
 	return 0;
 }
 
