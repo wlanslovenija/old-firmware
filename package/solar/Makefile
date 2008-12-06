@@ -1,0 +1,35 @@
+# 
+# Copyright (C) 2006 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
+# $Id: Makefile 7742 2007-06-27 05:26:20Z nbd $
+
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=solar
+PKG_VERSION:=0.1
+PKG_RELEASE:=1
+
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/solar
+  SECTION:=utils
+  CATEGORY:=Utilities
+  DEPENDS:=+cronscripts
+  TITLE:=Solar Manager
+  DESCRIPTION:=Solar power manager
+endef
+
+define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) ./src/* $(PKG_BUILD_DIR)
+endef
+
+define Package/solar/install
+endef
+
+$(eval $(call BuildPackage,solar))
