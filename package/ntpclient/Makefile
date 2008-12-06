@@ -11,7 +11,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=ntpclient
 PKG_REAL_VERSION:=2003_194
 PKG_VERSION:=$(PKG_REAL_VERSION)_kiberpipa
-PKG_RELEASE:=7
+PKG_RELEASE:=8
 
 PKG_SOURCE:=$(PKG_NAME)_$(PKG_REAL_VERSION).tar.gz
 PKG_SOURCE_URL:=http://doolittle.icarus.com/ntpclient/

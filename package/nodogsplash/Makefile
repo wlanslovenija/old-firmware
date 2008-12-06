@@ -11,7 +11,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=nodogsplash
 PKG_REAL_VERSION:=0.9_beta9.8
 PKG_VERSION:=$(PKG_REAL_VERSION)_kiberpipa
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_REAL_VERSION).tar.gz
 PKG_SOURCE_URL:=http://kokoro.ucsd.edu/nodogsplash/ \
