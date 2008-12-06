@@ -10,7 +10,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=solar
 PKG_VERSION:=0.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -32,6 +32,8 @@ endef
 define Package/solar/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/solar $(1)/usr/bin/
+	$(INSTALL_DIR) $(1)/etc/crontabs/run.30
+	$(INSTALL_BIN) ./files/push-status.sh $(1)/etc/crontabs/run.30/solar
 endef
 
 $(eval $(call BuildPackage,solar))
