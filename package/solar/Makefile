@@ -30,6 +30,8 @@ define Build/Prepare
 endef
 
 define Package/solar/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/solar $(1)/usr/bin/
 endef
 
 $(eval $(call BuildPackage,solar))
