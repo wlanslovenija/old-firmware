@@ -27,7 +27,7 @@ define Package/nodogsplash
   SUBMENU:=Captive Portals
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+libpthread +iptables-mod-ipopt
+  DEPENDS:=+libpthread +iptables-mod-ipopt +cronscripts
   TITLE:=Open public network gateway daemon
   URL:=http://kokoro.ucsd.edu/nodogsplash/
 endef
@@ -59,11 +59,10 @@ define Package/nodogsplash/install
 	$(INSTALL_DIR) $(1)/usr/lib/
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/* $(1)/usr/lib/
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(CP) ./files/nodogsplash.init $(1)/etc/init.d/nodogsplash
-	$(INSTALL_DIR) $(1)/etc/crontabs
-	$(CP) ./files/nds.cron $(1)/etc/crontabs/root
+	$(INSTALL_BIN) ./files/nodogsplash.init $(1)/etc/init.d/nodogsplash
+	$(INSTALL_DIR) $(1)/etc/crontabs/run.5
+	$(INSTALL_BIN) ./files/push-statistics.sh $(1)/etc/crontabs/run.5/nodogsplash
 	$(INSTALL_DIR) $(1)/etc/nodogsplash
-	$(CP) ./files/push-statistics.sh $(1)/etc/nodogsplash/
 	$(CP) ./files/parse_nds.awk $(1)/etc/nodogsplash/
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs
 	$(CP) ./files/infoskel.html $(1)/etc/nodogsplash/htdocs/

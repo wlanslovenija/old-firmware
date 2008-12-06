@@ -25,6 +25,7 @@ define Package/ntpclient
   SUBMENU:=Time Synchronization
   SECTION:=net
   CATEGORY:=Network
+  DEPENDS:=+cronscripts
   TITLE:=NTP (Network Time Protocol) client
   URL:=http://doolittle.icarus.com/ntpclient/
 endef
@@ -47,6 +48,8 @@ define Package/ntpclient/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ntpclient $(1)/usr/sbin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/adjtimex $(1)/usr/sbin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/rate.awk $(1)/usr/sbin/
+	$(INSTALL_DIR) $(1)/etc/crontabs/run.daily
+	$(INSTALL_BIN) ./files/ntpclient.cron $(1)/etc/crontabs/run.daily/ntpclient
 endef
 
 $(eval $(call BuildPackage,ntpclient))
