@@ -42,9 +42,16 @@ int write_buffer(int fd, unsigned char *buffer) {
 	int i = 0;
 	int w = 0;
 
+	// Will wait IO_WAIT seconds for the write
+	alarm(IO_WAIT);
+
 	while ((count = write(fd, buffer + w, sizeof(buffer) - w)) != sizeof(buffer) - w) {
 		if (count == -1) {
 			fprintf(stderr, "Could not write command: %s.\n", strerror(errno));
+
+			// Disables alarm
+			alarm(0);
+
 			return 2;
 		}
 		else if (i < RETRY) {
@@ -53,9 +60,16 @@ int write_buffer(int fd, unsigned char *buffer) {
 		}
 		else {
 			fprintf(stderr, "Could not write complete command buffer.\n");
+
+			// Disables alarm
+			alarm(0);
+
 			return 2;
 		}
 	}
+
+	// Disables alarm
+	alarm(0);
 
 	// Communication with PLI can immediately follow (read syscall is successful)
 	// but if PLI does not have data from the regulator yet it returns sent buffer
@@ -71,9 +85,16 @@ int read_buffer(int fd, unsigned char *buffer, int size) {
 	int i = 0;
 	int r = 0;
 
+	// Will wait IO_WAIT seconds for the write
+	alarm(IO_WAIT);
+
 	while ((count = read(fd, buffer + r, size - r)) != size - r) {
 		if (count == -1) {
 			fprintf(stderr, "Could not read response: %s.\n", strerror(errno));
+
+			// Disables alarm
+			alarm(0);
+
 			return 2;
 		}
 		else if (i < RETRY) {
@@ -82,9 +103,16 @@ int read_buffer(int fd, unsigned char *buffer, int size) {
 		}
 		else {
 			fprintf(stderr, "Could not read complete response buffer.\n");
+
+			// Disables alarm
+			alarm(0);
+
 			return 2;
 		}
 	}
+
+	// Disables alarm
+	alarm(0);
 
 	return 0;
 }

@@ -10,13 +10,6 @@
 #include "main.h"
 #include "pli.h"
 
-#define VERSION "0.1"
-#define DEFAULT_DEVICE_FILE "/dev/ttyS0"
-#define DEFAULT_BAUD B9600
-#define DEFAULT_BAUD_NAME 9600
-#define DEFAULT_INTERFACE "pli"
-#define LOCK_WAIT 10
-
 char *device = DEFAULT_DEVICE_FILE;
 speed_t baud = DEFAULT_BAUD;
 int plain_output = 0;
@@ -86,7 +79,7 @@ void printhelp(FILE *output) {
 }
 
 void lockwait(int signal) {
-	fprintf(stderr, "Timeout while waiting to lock serial port device file '%s'.\n", device);
+	fprintf(stderr, "Timeout while waiting for serial port device file '%s'.\n", device);
 	exit(2);
 }
 
@@ -107,8 +100,8 @@ int openserialport() {
 
 	if (tcsetattr(fd, TCSANOW, &params) == -1) return -1;
 
-	// Will wait LOCK_WAIT seconds for the lock
-	alarm(LOCK_WAIT);
+	// Will wait IO_WAIT seconds for the lock
+	alarm(IO_WAIT);
 
 	if (flock(fd, LOCK_EX) == -1) {
 		int e = errno;
