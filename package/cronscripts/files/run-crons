@@ -3,7 +3,7 @@
 CRONS="$1"
 
 if [[ -e "/etc/crontabs/run.${CRONS}" ]]; then
-  for SCRIPT in /etc/crontabs/run.${CRONS}/* do;
+  for SCRIPT in /etc/crontabs/run.${CRONS}/*; do
     if [[ -x $SCRIPT ]]; then
       $SCRIPT
     fi
