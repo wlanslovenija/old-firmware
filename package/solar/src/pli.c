@@ -9,16 +9,6 @@
 #include "pli.h"
 #include "main.h"
 
-#define RETRY 10
-#define LOFF 80 // 8.0 V
-#define LON 100 // 10.0 V
-#define LDEL 10 // 1 min
-#define INTLOAD_DIV 10.0 // PL20/PL40 = 10.0, PL60 = 5.0
-#define INTCHARGE_DIV 10.0  // PL20 = 10.0, PL40 = 5.0, PL60 = 2.5
-#define CONFIGURATION_START 0x0E
-#define CONFIGURATION_END 0x2C
-#define CONFIGURATION_SIZE (CONFIGURATION_END - CONFIGURATION_START + 1)
-
 command pli_commands[] = {
 	{"test", "loopback test connection to PLI", pli_test},
 	{"plversion", "get PL software version", pli_plversion},
@@ -33,7 +23,7 @@ command pli_commands[] = {
 	{"state", "get current regulator state", pli_state},
 	{"save", "save current configuration to 'solar.conf'", pli_save},
 	{"restore", "restore configuration from 'solar.conf'", pli_restore},
-	//{"powercycle", "powercycle load (switch power off and the back on)", pli_powercycle}, not really working (it does not turn the load back on)
+	{"powercycle", "switch power off to be (possibly) turned automatically back on", pli_powercycle},
 	{NULL, NULL}
 };
 
@@ -454,14 +444,6 @@ int pli_powercycle(int fd) {
 	if (write_processor(fd, 0x29, 0x00) == -1) return 3; // Wakes up the display
 	if (write_processor(fd, 0x29, 0x00) == -1) return 3; // Wakes up the display
 	if (write_processor(fd, 0x29, 0x00) == -1) return 3; // Wakes up the display
-
-	if ((write_eprom(fd, 0x15, LDEL)) == -1) return 3; // Sets delay before switching on/off
-	if ((write_eprom(fd, 0x13, LOFF)) == -1) return 3; // Sets voltage at which load disconnects
-	if ((write_eprom(fd, 0x14, LON)) == -1) return 3; // Sets voltage at which load reconnects
-
-	if ((write_processor(fd, 0x47, LDEL)) == -1) return 3; // Sets delay before switching on/off
-	if ((write_processor(fd, 0x45, LOFF)) == -1) return 3; // Sets voltage at which load disconnects
-	if ((write_processor(fd, 0x46, LON)) == -1) return 3; // Sets voltage at which load reconnects
 
 	if (write_processor(fd, 0x66, 0x17) == -1) return 3; // Selects lset display
 

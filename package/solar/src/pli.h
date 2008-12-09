@@ -3,6 +3,13 @@
 
 #import "main.h"
 
+#define RETRY 10
+#define INTLOAD_DIV 10.0 // PL20/PL40 = 10.0, PL60 = 5.0
+#define INTCHARGE_DIV 10.0  // PL20 = 10.0, PL40 = 5.0, PL60 = 2.5
+#define CONFIGURATION_START 0x0E
+#define CONFIGURATION_END 0x2C
+#define CONFIGURATION_SIZE (CONFIGURATION_END - CONFIGURATION_START + 1)
+
 extern command pli_commands[];
 
 int write_buffer(int fd, unsigned char buffer[]);

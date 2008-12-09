@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #define VERSION "0.1"
-#define DEFAULT_DEVICE_FILE "/dev/ttyS0"
+#define DEFAULT_DEVICE_FILE "/dev/tts/1"
 #define DEFAULT_BAUD B9600
 #define DEFAULT_BAUD_NAME 9600
 #define DEFAULT_INTERFACE "pli"
