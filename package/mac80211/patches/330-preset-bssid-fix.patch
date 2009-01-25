@@ -1,0 +1,84 @@
+--- a/net/mac80211/mlme.c	2009-01-25 22:28:38.000000000 +0100
++++ b/net/mac80211/mlme.c	2009-01-25 22:49:43.000000000 +0100
+@@ -1758,6 +1758,7 @@
+ 		       (unsigned long long)(rx_timestamp - beacon_timestamp),
+ 		       jiffies);
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
++#if 0
+ 		if (beacon_timestamp > rx_timestamp) {
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+ 			printk(KERN_DEBUG "%s: beacon TSF higher than "
+@@ -1767,6 +1768,7 @@
+ 			ieee80211_sta_join_ibss(sdata, &sdata->u.sta, bss);
+ 			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, supp_rates);
+ 		}
++#endif
+ 	}
+ 
+ 	ieee80211_rx_bss_put(local, bss);
+@@ -2595,6 +2597,11 @@
+ int ieee80211_sta_set_ssid(struct ieee80211_sub_if_data *sdata, char *ssid, size_t len)
+ {
+ 	struct ieee80211_if_sta *ifsta;
++	struct ieee80211_bss *bss;
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband;
++	u8 *pos;
++	int i, ret;
+ 
+ 	if (len > IEEE80211_MAX_SSID_LEN)
+ 		return -EINVAL;
+@@ -2612,12 +2619,48 @@
+ 		ifsta->flags |= IEEE80211_STA_SSID_SET;
+ 	else
+ 		ifsta->flags &= ~IEEE80211_STA_SSID_SET;
++	
++	if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
++		if (!(ifsta->flags & IEEE80211_STA_BSSID_SET)) {
++			ifsta->ibss_join_req = jiffies;
++			ifsta->state = IEEE80211_STA_MLME_IBSS_SEARCH;
++			return ieee80211_sta_find_ibss(sdata, ifsta);
++		} else {
++			/*
++			 * BSSID has been preconfigured - use that.
++			 */
++			bss = ieee80211_rx_bss_add(local, ifsta->bssid,
++						   local->hw.conf.channel->center_freq,
++						   sdata->u.sta.ssid, sdata->u.sta.ssid_len);
++			if (!bss)
++				return -ENOMEM;
++			
++			bss->band = local->hw.conf.channel->band;
++			sband = local->hw.wiphy->bands[bss->band];
++
++			if (local->hw.conf.beacon_int == 0)
++				local->hw.conf.beacon_int = 100;
++
++			bss->beacon_int = local->hw.conf.beacon_int;
++			bss->last_update = jiffies;
++			bss->capability = WLAN_CAPABILITY_IBSS;
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
+-	    !(ifsta->flags & IEEE80211_STA_BSSID_SET)) {
+-		ifsta->ibss_join_req = jiffies;
+-		ifsta->state = IEEE80211_STA_MLME_IBSS_SEARCH;
+-		return ieee80211_sta_find_ibss(sdata, ifsta);
++			if (sdata->default_key)
++				bss->capability |= WLAN_CAPABILITY_PRIVACY;
++			else
++				sdata->drop_unencrypted = 0;
++
++			bss->supp_rates_len = sband->n_bitrates;
++			pos = bss->supp_rates;
++			for (i = 0; i < sband->n_bitrates; i++) {
++				int rate = sband->bitrates[i].bitrate;
++				*pos++ = (u8) (rate / 5);
++			}
++			
++			ret = ieee80211_sta_join_ibss(sdata, ifsta, bss);
++			ieee80211_rx_bss_put(local, bss);
++			return ret;
++		}
+ 	}
+ 
+ 	return 0;

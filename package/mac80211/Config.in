@@ -1,0 +1,14 @@
+choice
+	prompt "b43 firmware version"
+	depends on PACKAGE_kmod-b43
+	default B43_STABLE
+	help
+	  This option allows you to select the version of the b43 firmware.
+
+config B43_STABLE
+	bool "4.150.10.5 stable"
+
+config B43_UNSTABLE
+	bool "4.178.10.4 experimental"
+
+endchoice

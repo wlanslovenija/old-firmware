@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
-# OpenWrt version: Kamikaze (r12679)
-# Wed Sep 24 13:42:10 2008
+# OpenWrt version: Kamikaze (r66)
+# Sun Jan 25 21:21:28 2009
 #
 CONFIG_HAVE_DOT_CONFIG=y
 # CONFIG_TARGET_ppc40x is not set
@@ -10,9 +10,9 @@ CONFIG_HAVE_DOT_CONFIG=y
 # CONFIG_TARGET_ar71xx is not set
 # CONFIG_TARGET_at91 is not set
 # CONFIG_TARGET_avr32 is not set
+# CONFIG_TARGET_brcm63xx is not set
 # CONFIG_TARGET_brcm_2_4 is not set
 CONFIG_TARGET_brcm47xx=y
-# CONFIG_TARGET_brcm63xx is not set
 # CONFIG_TARGET_sibyte is not set
 # CONFIG_TARGET_etrax is not set
 # CONFIG_TARGET_amazon is not set
@@ -20,7 +20,6 @@ CONFIG_TARGET_brcm47xx=y
 # CONFIG_TARGET_adm5120 is not set
 # CONFIG_TARGET_iop32x is not set
 # CONFIG_TARGET_ixp4xx is not set
-# CONFIG_TARGET_magicbox is not set
 # CONFIG_TARGET_orion is not set
 # CONFIG_TARGET_pxa is not set
 # CONFIG_TARGET_rb532 is not set
@@ -31,9 +30,17 @@ CONFIG_TARGET_brcm47xx=y
 # CONFIG_TARGET_storm is not set
 # CONFIG_TARGET_ar7 is not set
 # CONFIG_TARGET_uml is not set
+# CONFIG_TARGET_s3c24xx is not set
 # CONFIG_TARGET_x86 is not set
+# CONFIG_TARGET_ifxmips_None is not set
 # CONFIG_TARGET_ifxmips_Atheros is not set
 # CONFIG_TARGET_ifxmips_Ralink is not set
+# CONFIG_TARGET_ifxmips_generic_None is not set
+# CONFIG_TARGET_ifxmips_generic_Atheros is not set
+# CONFIG_TARGET_ifxmips_generic_Ralink is not set
+# CONFIG_TARGET_ifxmips_nfs_None is not set
+# CONFIG_TARGET_ifxmips_nfs_Atheros is not set
+# CONFIG_TARGET_ifxmips_nfs_Ralink is not set
 # CONFIG_TARGET_ppc44x_Default is not set
 # CONFIG_TARGET_etrax_default is not set
 # CONFIG_TARGET_etrax_vhdl_no_fb is not set
@@ -53,30 +60,34 @@ CONFIG_TARGET_brcm47xx=y
 # CONFIG_TARGET_x86_generic_Generic is not set
 # CONFIG_TARGET_x86_generic_Alix is not set
 # CONFIG_TARGET_x86_generic_Pcengines is not set
-# CONFIG_TARGET_x86_generic_Soekris is not set
+# CONFIG_TARGET_x86_generic_Soekris45xx is not set
+# CONFIG_TARGET_x86_generic_Soekris48xx is not set
 # CONFIG_TARGET_pxa_Default is not set
 # CONFIG_TARGET_ar7_Texas is not set
 # CONFIG_TARGET_ar7_None is not set
-# CONFIG_TARGET_magicbox_Default is not set
+# CONFIG_TARGET_s3c24xx_openmoko-gta02-minimal is not set
+# CONFIG_TARGET_s3c24xx_openmoko-gta02-full is not set
 # CONFIG_TARGET_avr32_Default is not set
 # CONFIG_TARGET_olpc_Default is not set
 # CONFIG_TARGET_rb532_Default is not set
 # CONFIG_TARGET_uml_Default is not set
 # CONFIG_TARGET_sibyte_Default is not set
 # CONFIG_TARGET_ixp4xx_generic_Default is not set
+# CONFIG_TARGET_ixp4xx_generic_Atheros-ath5k is not set
 # CONFIG_TARGET_ixp4xx_generic_NSLU2 is not set
 # CONFIG_TARGET_ixp4xx_generic_NAS100d is not set
 # CONFIG_TARGET_ixp4xx_generic_DSMG600RevA is not set
+# CONFIG_TARGET_ixp4xx_generic_USR8200 is not set
 # CONFIG_TARGET_ixp4xx_harddisk_FSG3 is not set
 # CONFIG_TARGET_atheros_Default is not set
-# CONFIG_TARGET_ps3_Default is not set
+# CONFIG_TARGET_ps3_petitboot_Default is not set
 # CONFIG_TARGET_au1000_Atheros is not set
-# CONFIG_TARGET_au1000_Broadcom is not set
-# CONFIG_TARGET_au1000_Intel is not set
 # CONFIG_TARGET_au1000_InternetBox is not set
 # CONFIG_TARGET_au1000_MeshCube is not set
+# CONFIG_TARGET_rdc_amit is not set
 # CONFIG_TARGET_rdc_ar525w is not set
 # CONFIG_TARGET_rdc_dir450 is not set
+# CONFIG_TARGET_rdc_g570s is not set
 # CONFIG_TARGET_rdc_wl153 is not set
 # CONFIG_TARGET_adm5120_router_le_Generic is not set
 # CONFIG_TARGET_adm5120_router_le_CAS630 is not set
@@ -101,15 +112,17 @@ CONFIG_TARGET_brcm47xx=y
 # CONFIG_TARGET_adm5120_router_le_BR6114WG is not set
 # CONFIG_TARGET_adm5120_router_le_EASY5120RT is not set
 # CONFIG_TARGET_adm5120_router_le_EASY5120PATA is not set
+# CONFIG_TARGET_adm5120_router_le_PMUGW is not set
 # CONFIG_TARGET_adm5120_router_le_RouterBoard is not set
 # CONFIG_TARGET_adm5120_router_be_Generic is not set
 # CONFIG_TARGET_adm5120_router_be_P334WT is not set
 # CONFIG_TARGET_adm5120_router_be_P335WT is not set
-# CONFIG_TARGET_brcm63xx_Atheros is not set
 # CONFIG_TARGET_brcm63xx_Broadcom is not set
+# CONFIG_TARGET_brcm63xx_Atheros is not set
 # CONFIG_TARGET_brcm63xx_Ralink is not set
-# CONFIG_TARGET_brcm47xx_Atheros is not set
 CONFIG_TARGET_brcm47xx_Broadcom-b43=y
+# CONFIG_TARGET_brcm47xx_Atheros is not set
+# CONFIG_TARGET_brcm47xx_Atheros-ath5k is not set
 # CONFIG_TARGET_brcm47xx_None is not set
 # CONFIG_TARGET_brcm47xx_WGT634U is not set
 # CONFIG_TARGET_brcm47xx_WL500GPv1 is not set
@@ -120,7 +133,28 @@ CONFIG_TARGET_brcm47xx_Broadcom-b43=y
 # CONFIG_TARGET_orion_Default is not set
 # CONFIG_TARGET_ar71xx_Default is not set
 CONFIG_TARGET_BOARD="brcm47xx"
-CONFIG_LINUX_2_6_25=y
+CONFIG_LINUX_2_6_28=y
+CONFIG_DEFAULT_base-files=y
+CONFIG_DEFAULT_busybox=y
+CONFIG_DEFAULT_dnsmasq=y
+CONFIG_DEFAULT_dropbear=y
+CONFIG_DEFAULT_firewall=y
+CONFIG_DEFAULT_hostapd-mini=y
+CONFIG_DEFAULT_hotplug2=y
+CONFIG_DEFAULT_iptables=y
+CONFIG_DEFAULT_kmod-b43=y
+CONFIG_DEFAULT_kmod-b43legacy=y
+CONFIG_DEFAULT_kmod-diag=y
+CONFIG_DEFAULT_kmod-ipt-nathelper=y
+CONFIG_DEFAULT_kmod-switch=y
+CONFIG_DEFAULT_libc=y
+CONFIG_DEFAULT_libgcc=y
+CONFIG_DEFAULT_mtd=y
+CONFIG_DEFAULT_opkg=y
+CONFIG_DEFAULT_ppp=y
+CONFIG_DEFAULT_ppp-mod-pppoe=y
+CONFIG_DEFAULT_uci=y
+CONFIG_DEFAULT_udevtrigger=y
 CONFIG_LINUX_2_6=y
 CONFIG_GPIO_SUPPORT=y
 CONFIG_PCI_SUPPORT=y
@@ -142,52 +176,58 @@ CONFIG_TARGET_ROOTFS_SQUASHFS=y
 #
 # Image Options
 #
-CONFIG_OLPC_BOOTSCRIPT_ROOTPART="/dev/hda2"
+CONFIG_OLPC_BOOTSCRIPT_ROOTPART="/dev/sda2"
 CONFIG_X86_GRUB_ROOTPART="/dev/hda2"
 CONFIG_X86_GRUB_BOOTOPTS=""
+
+#
+# Global build settings
+#
 CONFIG_ALL=y
-CONFIG_DEVEL=y
-CONFIG_BROKEN=y
-CONFIG_DOWNLOAD_FOLDER=""
-CONFIG_LOCALMIRROR=""
-CONFIG_BUILDOPTS=y
-# CONFIG_DEBUG is not set
-# CONFIG_NO_STRIP is not set
+
+#
+# Features
+#
 # CONFIG_CLEAN_IPKG is not set
+
+#
+# Package build options
+#
+# CONFIG_DEBUG is not set
+# CONFIG_DEBUG_DIR is not set
+# CONFIG_NO_STRIP is not set
+
+#
+# Kernel build options
+#
+# CONFIG_KERNEL_KALLSYMS is not set
+# CONFIG_DEVEL is not set
+# CONFIG_BROKEN is not set
+CONFIG_DOWNLOAD_FOLDER=""
 CONFIG_AUTOREBUILD=y
 CONFIG_BUILD_SUFFIX=""
-# CONFIG_TAR_VERBOSITY is not set
 # CONFIG_CCACHE is not set
 CONFIG_EXTERNAL_KERNEL_TREE=""
+CONFIG_KERNEL_GIT_CLONE_URI=""
+CONFIG_KERNEL_GIT_LOCAL_REPOSITORY=""
 # CONFIG_NATIVE_TOOLCHAIN is not set
-CONFIG_TOOLCHAINOPTS=y
 # CONFIG_EXTRA_TARGET_ARCH is not set
-# CONFIG_BINUTILS_VERSION_2_16_1 is not set
-CONFIG_BINUTILS_VERSION_2_17=y
-# CONFIG_BINUTILS_VERSION_2_18 is not set
 CONFIG_EXTRA_BINUTILS_CONFIG_OPTIONS=""
 CONFIG_BINUTILS_VERSION="2.17"
-# CONFIG_GCC_VERSION_3_4_6 is not set
-CONFIG_GCC_VERSION_4_1_2=y
-# CONFIG_GCC_VERSION_4_2_0 is not set
-# CONFIG_GCC_VERSION_4_2_1 is not set
-# CONFIG_GCC_VERSION_4_2_2 is not set
-# CONFIG_GCC_VERSION_4_2_3 is not set
-# CONFIG_GCC_VERSION_4_2_4 is not set
 CONFIG_EXTRA_GCC_CONFIG_OPTIONS=""
 # CONFIG_SSP_SUPPORT is not set
 CONFIG_INSTALL_LIBSTDCPP=y
 # CONFIG_INSTALL_LIBGCJ is not set
-# CONFIG_UCLIBC_VERSION_SNAPSHOT is not set
-# CONFIG_UCLIBC_VERSION_0_9_28 is not set
-CONFIG_UCLIBC_VERSION_0_9_29=y
-CONFIG_UCLIBC_EXTRA_VERSION=""
+CONFIG_USE_UCLIBC=y
 # CONFIG_GDB is not set
 CONFIG_LARGEFILE=y
 CONFIG_SHADOW_PASSWORDS=y
 CONFIG_TARGET_OPTIMIZATION="-Os -pipe -mips32 -mtune=mips32 -funit-at-a-time"
 CONFIG_GCC_VERSION="4.1.2"
 CONFIG_UCLIBC_VERSION="0.9.29"
+CONFIG_LIBC="uClibc"
+CONFIG_LIBC_VERSION="0.9.29"
+CONFIG_TARGET_SUFFIX="uclibc"
 CONFIG_IB=y
 # CONFIG_SDK is not set
 # CONFIG_UCI_PRECONFIG is not set
@@ -200,20 +240,6 @@ CONFIG_UCI_PRECONFIG_network_lan_ipaddr="192.168.1.1"
 #
 # Base system
 #
-CONFIG_DEFAULT_base-files=y
-CONFIG_DEFAULT_libgcc=y
-CONFIG_DEFAULT_uclibc=y
-CONFIG_DEFAULT_bridge=y
-CONFIG_DEFAULT_busybox=y
-CONFIG_DEFAULT_dnsmasq=y
-CONFIG_DEFAULT_dropbear=y
-CONFIG_DEFAULT_firewall=y
-CONFIG_DEFAULT_hotplug2=y
-CONFIG_DEFAULT_iptables=y
-CONFIG_DEFAULT_mtd=y
-CONFIG_DEFAULT_opkg=y
-CONFIG_DEFAULT_uci=y
-CONFIG_DEFAULT_udevtrigger=y
 CONFIG_PACKAGE_base-files=y
 # CONFIG_PACKAGE_br2684ctl is not set
 CONFIG_PACKAGE_bridge=y
@@ -902,16 +928,17 @@ CONFIG_BUSYBOX_CONFIG_LOGGER=y
 # CONFIG_BUSYBOX_CONFIG_LPD is not set
 # CONFIG_BUSYBOX_CONFIG_LPR is not set
 # CONFIG_BUSYBOX_CONFIG_LPQ is not set
+CONFIG_PACKAGE_cronscripts=y
 CONFIG_PACKAGE_dnsmasq=y
 CONFIG_PACKAGE_dropbear=y
-CONFIG_PACKAGE_firewall=y
+# CONFIG_PACKAGE_ead is not set
+# CONFIG_PACKAGE_firewall is not set
 CONFIG_PACKAGE_hotplug2=y
 CONFIG_PACKAGE_iptables=y
 CONFIG_PACKAGE_iptables-mod-conntrack=y
 # CONFIG_PACKAGE_iptables-mod-conntrack-extra is not set
-CONFIG_PACKAGE_iptables-mod-extra=y
+# CONFIG_PACKAGE_iptables-mod-extra is not set
 # CONFIG_PACKAGE_iptables-mod-filter is not set
-# CONFIG_PACKAGE_iptables-mod-imq is not set
 CONFIG_PACKAGE_iptables-mod-ipopt=y
 # CONFIG_PACKAGE_iptables-mod-iprange is not set
 # CONFIG_PACKAGE_iptables-mod-ipsec is not set
@@ -921,46 +948,20 @@ CONFIG_PACKAGE_iptables-mod-nat=y
 # CONFIG_PACKAGE_iptables-mod-ulog is not set
 # CONFIG_PACKAGE_iptables-utils is not set
 # CONFIG_PACKAGE_ldconfig is not set
-# CONFIG_PACKAGE_ldd is not set
+CONFIG_PACKAGE_libc=y
 CONFIG_PACKAGE_libgcc=y
 CONFIG_PACKAGE_libpthread=y
+CONFIG_PACKAGE_librt=y
 # CONFIG_PACKAGE_libstdcpp is not set
 CONFIG_PACKAGE_mtd=y
 CONFIG_PACKAGE_opkg=y
-# CONFIG_PACKAGE_qos-scripts is not set
 CONFIG_PACKAGE_uci=y
-CONFIG_PACKAGE_uclibc=y
 CONFIG_PACKAGE_udevtrigger=y
 CONFIG_PACKAGE_wireless-tools=y
 
 #
-# Libraries
-#
-
-#
-# disc
-#
-# CONFIG_PACKAGE_libfuse is not set
-# CONFIG_PACKAGE_libblkid is not set
-# CONFIG_PACKAGE_libiw is not set
-# CONFIG_PACKAGE_libltdl is not set
-# CONFIG_PACKAGE_liblua is not set
-CONFIG_PACKAGE_liblzo=y
-# CONFIG_PACKAGE_libncurses is not set
-# CONFIG_PACKAGE_libnl is not set
-CONFIG_PACKAGE_libopenssl=y
-CONFIG_PACKAGE_libpcap=y
-CONFIG_PACKAGE_libuci=y
-# CONFIG_PACKAGE_libuci-lua is not set
-# CONFIG_PACKAGE_libuuid is not set
-# CONFIG_PACKAGE_linux-atm is not set
-CONFIG_PACKAGE_zlib=y
-
-#
 # Network
 #
-CONFIG_DEFAULT_ppp=y
-CONFIG_DEFAULT_ppp-mod-pppoe=y
 
 #
 # Captive Portals
@@ -979,6 +980,7 @@ CONFIG_PACKAGE_openvpn=y
 # CONFIG_PACKAGE_openvpn-easy-rsa is not set
 # CONFIG_PACKAGE_arptables is not set
 # CONFIG_PACKAGE_ebtables is not set
+# CONFIG_PACKAGE_ebtables-utils is not set
 # CONFIG_PACKAGE_genl is not set
 # CONFIG_PACKAGE_hostapd is not set
 # CONFIG_PACKAGE_hostapd-mini is not set
@@ -997,8 +999,32 @@ CONFIG_PACKAGE_olsrd=y
 # CONFIG_PACKAGE_ppp is not set
 # CONFIG_PACKAGE_pptp is not set
 # CONFIG_PACKAGE_tc is not set
-# CONFIG_PACKAGE_tcpdump is not set
 # CONFIG_PACKAGE_wpa-supplicant is not set
+
+#
+# Libraries
+#
+
+#
+# disc
+#
+# CONFIG_PACKAGE_libfuse is not set
+# CONFIG_PACKAGE_libblkid is not set
+# CONFIG_PACKAGE_libext2fs is not set
+# CONFIG_PACKAGE_libiw is not set
+# CONFIG_PACKAGE_libltdl is not set
+# CONFIG_PACKAGE_liblua is not set
+CONFIG_PACKAGE_liblzo=y
+# CONFIG_PACKAGE_libncurses is not set
+# CONFIG_PACKAGE_libnl is not set
+CONFIG_PACKAGE_libopenssl=y
+# CONFIG_PACKAGE_libpcap is not set
+CONFIG_PACKAGE_libreadline=m
+CONFIG_PACKAGE_libuci=y
+# CONFIG_PACKAGE_libuci-lua is not set
+# CONFIG_PACKAGE_libuuid is not set
+# CONFIG_PACKAGE_linux-atm is not set
+CONFIG_PACKAGE_zlib=y
 
 #
 # IPv6
@@ -1009,14 +1035,11 @@ CONFIG_PACKAGE_ip6tables=y
 #
 # Kernel modules
 #
-CONFIG_DEFAULT_kmod-b43=y
-CONFIG_DEFAULT_kmod-diag=y
-CONFIG_DEFAULT_kmod-ipt-nathelper=y
-CONFIG_DEFAULT_kmod-switch=y
 
 #
 # Block Devices
 #
+# CONFIG_PACKAGE_kmod-aoe is not set
 # CONFIG_PACKAGE_kmod-ata-core is not set
 # CONFIG_PACKAGE_kmod-ide-aec62xx is not set
 # CONFIG_PACKAGE_kmod-ide-core is not set
@@ -1028,13 +1051,15 @@ CONFIG_DEFAULT_kmod-switch=y
 #
 # Cryptographic API modules
 #
-# CONFIG_PACKAGE_kmod-crypto-aead is not set
 CONFIG_PACKAGE_kmod-crypto-aes=y
 CONFIG_PACKAGE_kmod-crypto-arc4=y
 # CONFIG_PACKAGE_kmod-crypto-authenc is not set
 CONFIG_PACKAGE_kmod-crypto-core=y
 # CONFIG_PACKAGE_kmod-crypto-des is not set
 # CONFIG_PACKAGE_kmod-crypto-hmac is not set
+# CONFIG_PACKAGE_kmod-crypto-hw-geode is not set
+# CONFIG_PACKAGE_kmod-crypto-hw-hifn-795x is not set
+# CONFIG_PACKAGE_kmod-crypto-hw-padlock is not set
 # CONFIG_PACKAGE_kmod-crypto-md5 is not set
 # CONFIG_PACKAGE_kmod-crypto-michael-mic is not set
 # CONFIG_PACKAGE_kmod-crypto-misc is not set
@@ -1074,6 +1099,11 @@ CONFIG_PACKAGE_kmod-crypto-core=y
 # CONFIG_PACKAGE_kmod-nls-utf8 is not set
 
 #
+# FireWire support
+#
+# CONFIG_PACKAGE_kmod-ieee1394 is not set
+
+#
 # Hardware Monitoring Support
 #
 # CONFIG_PACKAGE_kmod-hwmon-core is not set
@@ -1092,9 +1122,8 @@ CONFIG_PACKAGE_kmod-ip6tables=y
 CONFIG_PACKAGE_kmod-ipt-core=y
 CONFIG_PACKAGE_kmod-ipt-conntrack=y
 # CONFIG_PACKAGE_kmod-ipt-conntrack-extra is not set
-CONFIG_PACKAGE_kmod-ipt-extra=y
+# CONFIG_PACKAGE_kmod-ipt-extra is not set
 # CONFIG_PACKAGE_kmod-ipt-filter is not set
-# CONFIG_PACKAGE_kmod-ipt-imq is not set
 CONFIG_PACKAGE_kmod-ipt-ipopt=y
 # CONFIG_PACKAGE_kmod-ipt-iprange is not set
 # CONFIG_PACKAGE_kmod-ipt-ipsec is not set
@@ -1109,23 +1138,27 @@ CONFIG_PACKAGE_kmod-ipt-nathelper=y
 #
 # Network Devices
 #
+# CONFIG_PACKAGE_kmod-hfcmulti is not set
+# CONFIG_PACKAGE_kmod-siit is not set
 # CONFIG_PACKAGE_kmod-ssb-gige is not set
 # CONFIG_PACKAGE_kmod-tg3 is not set
 
 #
 # Network Support
 #
-# CONFIG_PACKAGE_kmod-atm is not set
+CONFIG_PACKAGE_kmod-atm=m
+# CONFIG_PACKAGE_kmod-atmtcp is not set
 # CONFIG_PACKAGE_kmod-ax25 is not set
 # CONFIG_PACKAGE_kmod-bonding is not set
 # CONFIG_PACKAGE_kmod-capi is not set
 # CONFIG_PACKAGE_kmod-gre is not set
 # CONFIG_PACKAGE_kmod-ip6-tunnel is not set
 # CONFIG_PACKAGE_kmod-ipip is not set
+# CONFIG_PACKAGE_kmod-ipoa is not set
 # CONFIG_PACKAGE_kmod-ipsec is not set
-# CONFIG_PACKAGE_kmod-iptunnel4 is not set
 # CONFIG_PACKAGE_kmod-iptunnel6 is not set
 CONFIG_PACKAGE_kmod-ipv6=y
+# CONFIG_PACKAGE_kmod-misdn is not set
 # CONFIG_PACKAGE_kmod-mp-alg is not set
 # CONFIG_PACKAGE_kmod-ppp is not set
 # CONFIG_PACKAGE_kmod-pktgen is not set
@@ -1143,9 +1176,10 @@ CONFIG_PACKAGE_kmod-tun=y
 #
 # CONFIG_PACKAGE_kmod-bluetooth is not set
 # CONFIG_PACKAGE_kmod-button-hotplug is not set
+# CONFIG_PACKAGE_kmod-crc-ccitt is not set
 # CONFIG_PACKAGE_kmod-crc-itu-t is not set
 # CONFIG_PACKAGE_kmod-crc7 is not set
-CONFIG_PACKAGE_kmod-diag=y
+# CONFIG_PACKAGE_kmod-diag is not set
 # CONFIG_PACKAGE_kmod-eeprom-93cx6 is not set
 # CONFIG_PACKAGE_kmod-gpio-dev is not set
 # CONFIG_PACKAGE_kmod-hid is not set
@@ -1193,13 +1227,17 @@ CONFIG_PACKAGE_kmod-switch=y
 #
 # Wireless Drivers
 #
-# CONFIG_PACKAGE_kmod-acx-mac80211 is not set
 # CONFIG_PACKAGE_kmod-ath5k is not set
+# CONFIG_PACKAGE_kmod-ath9k is not set
 CONFIG_PACKAGE_kmod-b43=y
+# CONFIG_B43_STABLE is not set
+CONFIG_B43_UNSTABLE=y
+# CONFIG_PACKAGE_kmod-b43legacy is not set
 # CONFIG_PACKAGE_kmod-hostap is not set
 # CONFIG_PACKAGE_kmod-ieee80211 is not set
 # CONFIG_PACKAGE_kmod-ieee80211-softmac is not set
 CONFIG_PACKAGE_kmod-mac80211=y
+# CONFIG_PACKAGE_kmod-mac80211-hwsim is not set
 # CONFIG_PACKAGE_kmod-madwifi is not set
 # CONFIG_PACKAGE_kmod-net-airo is not set
 # CONFIG_PACKAGE_kmod-net-bcm43xx is not set
@@ -1207,18 +1245,21 @@ CONFIG_PACKAGE_kmod-mac80211=y
 # CONFIG_PACKAGE_kmod-net-ipw2100 is not set
 # CONFIG_PACKAGE_kmod-net-ipw2200 is not set
 # CONFIG_PACKAGE_kmod-net-prism54 is not set
-# CONFIG_PACKAGE_kmod-net-zd1211rw is not set
 # CONFIG_PACKAGE_kmod-p54-common is not set
 # CONFIG_PACKAGE_kmod-p54-pci is not set
 # CONFIG_PACKAGE_kmod-p54-usb is not set
 # CONFIG_PACKAGE_kmod-rt2400-pci is not set
 # CONFIG_PACKAGE_kmod-rt2500-pci is not set
 # CONFIG_PACKAGE_kmod-rt2500-usb is not set
+# CONFIG_PACKAGE_kmod-rt2800-pci is not set
+# CONFIG_PACKAGE_kmod-rt2800-usb is not set
 # CONFIG_PACKAGE_kmod-rt2x00-lib is not set
 # CONFIG_PACKAGE_kmod-rt2x00-pci is not set
 # CONFIG_PACKAGE_kmod-rt2x00-usb is not set
 # CONFIG_PACKAGE_kmod-rt61-pci is not set
 # CONFIG_PACKAGE_kmod-rt73-usb is not set
+# CONFIG_PACKAGE_kmod-zd1211rw is not set
+# CONFIG_PACKAGE_kmod-iptunnel4 is not set
 
 #
 # Boot Loaders
@@ -1238,14 +1279,18 @@ CONFIG_PACKAGE_kmod-mac80211=y
 # CONFIG_PACKAGE_dropbearconvert is not set
 # CONFIG_PACKAGE_e2fsprogs is not set
 # CONFIG_PACKAGE_fconfig is not set
+# CONFIG_PACKAGE_gdb is not set
+# CONFIG_PACKAGE_gdbserver is not set
 # CONFIG_PACKAGE_gpioctl is not set
 # CONFIG_PACKAGE_hwclock is not set
 # CONFIG_PACKAGE_kexec-tools is not set
 CONFIG_KEXEC_TOOLS_TARGET_NAME="mipsel"
 # CONFIG_PACKAGE_losetup is not set
 # CONFIG_PACKAGE_mount-utils is not set
+# CONFIG_PACKAGE_ocf-crypto-headers is not set
 # CONFIG_PACKAGE_openssl-util is not set
 # CONFIG_PACKAGE_robocfg is not set
+CONFIG_PACKAGE_solar=y
 # CONFIG_PACKAGE_udev is not set
 # CONFIG_PACKAGE_udevextras is not set
 # CONFIG_UDEVEXTRAS_ata_id is not set
@@ -1256,6 +1301,11 @@ CONFIG_KEXEC_TOOLS_TARGET_NAME="mipsel"
 # CONFIG_UDEVEXTRAS_scsi_id is not set
 # CONFIG_UDEVEXTRAS_usb_id is not set
 # CONFIG_UDEVEXTRAS_volume_id is not set
+
+#
+# Extra packages
+#
+# CONFIG_PACKAGE_ldd is not set
 
 #
 # Languages
