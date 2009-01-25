@@ -19,7 +19,9 @@ LOCALTIME=`date +%s`
 UPTIME=`cat /proc/uptime | awk '{ print $1 }'`
 TRANSFERRED=`cat /proc/net/dev | awk -F: '!/\|/ { gsub(/[[:space:]]*/, "", $1); split($2, a, " "); printf("&iface_%s=%d", $1, a[1]) }'`
 BSSID=`iwconfig 2>/dev/null | grep Cell | awk '{ print $5 }'`
-wget -O - -q "http://10.16.0.1/traffic/wifi/feed?status=1&bssid=${BSSID}&local_time=${LOCALTIME}&uptime=${UPTIME}${TRANSFERRED}" >/dev/null
+ESSID=`iwconfig | grep ESSID | awk '{ split($4, a, "\""); printf("%s", a[2]); }'`
+VERSION=`cat /etc/version`
+wget -O - -q "http://10.16.0.1/traffic/wifi/feed?status=1&bssid=${BSSID}&essid=${ESSID}&version=${VERSION}&local_time=${LOCALTIME}&uptime=${UPTIME}${TRANSFERRED}" >/dev/null
 
 # Push client list
 CMDS=`ndsctl -s /var/run/nodogsplash.sock clients | awk -f /etc/nodogsplash/parse_nds.awk`
