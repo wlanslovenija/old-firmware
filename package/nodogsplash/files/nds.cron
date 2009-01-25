@@ -1,2 +1,0 @@
-# Submit nodogsplash statistics to control server
-*/5 * * * * /etc/nodogsplash/push-statistics.sh

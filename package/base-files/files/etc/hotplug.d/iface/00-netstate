@@ -1,3 +1,0 @@
-[ ifup = "$ACTION" ] && {
-	uci set "/var/state/network.$INTERFACE.up=1"
-}

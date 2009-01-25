@@ -1,2 +1,0 @@
-CONFIG="/etc/openvpn/ljwifi.conf"
-OPTIONS="--config $CONFIG"
