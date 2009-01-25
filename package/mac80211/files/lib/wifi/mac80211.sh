@@ -73,6 +73,7 @@ enable_mac80211() {
 				iwlist "$ifname" scan >/dev/null 2>/dev/null
 				sleep 1
 				iwconfig "$ifname" mode ad-hoc >/dev/null 2>/dev/null
+				iwconfig "$ifname" rate 24M >/dev/null 2>/dev/null
 			fi
 			sleep 1
 			iwconfig "$ifname" channel "$channel" >/dev/null 2>/dev/null
