@@ -1,0 +1,32 @@
+--- busybox-1.11.2/networking/httpd.c.orig	2008-09-24 16:37:02.000000000 +0200
++++ busybox-1.11.2/networking/httpd.c	2008-09-24 16:44:10.000000000 +0200
+@@ -967,6 +967,9 @@
+ 	char tmp_str[80];
+ 	int len;
+ 
++	if (redirect_path && responseNum == HTTP_NOT_FOUND)
++		responseNum = HTTP_MOVED_TEMPORARILY;
++
+ 	for (i = 0; i < ARRAY_SIZE(http_response_type); i++) {
+ 		if (http_response_type[i] == responseNum) {
+ 			responseString = http_response[i].name;
+@@ -1002,7 +1005,7 @@
+ 		len += sprintf(iobuf + len, "Location: %s%s%s%s%s%s\r\n",
+ 				(redirect_host ? "http://" : ""),
+ 				(redirect_host ? redirect_host : ""),
+-				found_moved_temporarily,
++				(found_moved_temporarily ? found_moved_temporarily : redirect_path),
+ 				(redirect_host ? "" : "/"),
+ 				(g_query ? "?" : ""),
+ 				(g_query ? g_query : ""));
+@@ -1939,10 +1942,6 @@
+ 	} while (*++tptr);
+ 	*++urlp = '\0';       /* terminate after last character */
+ 
+-	/* redirect active */
+-	if (redirect_path && (strncmp(urlcopy, redirect_path, strlen(redirect_path)) != 0))
+-		found_moved_temporarily = redirect_path;
+-
+ 	/* If URL is a directory, add '/' */
+ 	if (!redirect_path && (urlp[-1] != '/')) {
+ 		if (is_directory(urlcopy + 1, 1, &sb)) {
