@@ -12,7 +12,7 @@ include $(INCLUDE_DIR)/kernel.mk
 PKG_NAME:=madwifi
 PKG_REV:=3314
 PKG_REAL_VERSION:=r$(PKG_REV)
-PKG_VERSION:=$(PKG_REAL_VERSION)_kiberpipa
+PKG_VERSION:=$(PKG_REAL_VERSION)_wlanlj
 # PKG_BRANCH:=madwifi-dfs
 PKG_RELEASE:=1
 

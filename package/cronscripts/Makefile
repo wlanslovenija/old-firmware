@@ -9,7 +9,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=cronscripts
-PKG_VERSION:=0.1_kiberpipa
+PKG_VERSION:=0.1_wlanlj
 PKG_RELEASE:=4
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
