@@ -1,16 +1,17 @@
 BEGIN {
   in_client = 0
+  client_num = 0
 }
 
 {
   n = split($1, a, /=/)
-  
+
   if (n == 1) {
     client_count = a[1]
   } else if (n == 2) {
     field = a[1]
     value = a[2]
-    
+
     if (field == "client_id") {
       in_client = 1
     } else if (field == "ip" || field == "mac") {
@@ -30,19 +31,11 @@ BEGIN {
     }
   } else if (n == 0 && in_client == 1) {
     in_client = 0
-    
-    first = 1
-    printf("wget -O - -q 'http://10.16.0.1/traffic/wifi/feed?")
-    
+
     for (field in fields) {
-      if (first) {
-        first = 0
-        printf("%s=%s", field, fields[field])
-      } else {
-        printf("&%s=%s", field, fields[field])
-      }
+      printf("nds.client%d.%s: %s\n", client_num, field, fields[field])
     }
     
-    printf("' >/dev/null\n")
+    client_num = client_num + 1
   }
 }

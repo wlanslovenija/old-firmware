@@ -1,0 +1,87 @@
+#!/bin/sh -e
+#
+# NodeWatcher cgi-bin script
+# 
+
+#
+# A helper function for outputing key-value pairs in proper
+# format.
+#
+show_entry()
+{
+  KEY="$1"
+  VALUE="$2"
+  
+  echo "${KEY}: ${VALUE}"
+}
+
+#
+# Displays general statistics about a node such as firmware version,
+# local time, uptime, bssid, essid, channel.
+#
+general_stats()
+{
+  # System stuff
+  show_entry "general.version" "`cat /etc/version`"
+  show_entry "general.local_time" "`date +%s`"
+  show_entry "general.uptime" "`cat /proc/uptime`"
+  
+  # Wireless parameters
+  show_entry "wifi.bssid" "`iwconfig 2>/dev/null | grep Cell | awk '{ print $5 }'`"
+  show_entry "wifi.essid" "`iwconfig 2>/dev/null | grep ESSID | awk '{ split($4, a, \"\\"\"); printf(\"%s\", a[2]); }'`"
+  show_entry "wifi.frequency" "`iwconfig 2>/dev/null | grep Frequency | awk '{ print $2 }' | cut -d ':' -f 2`"
+}
+
+#
+# Displays traffic statistics for each network interface found.
+#
+traffic_stats()
+{
+  IFACES=`cat /proc/net/dev | awk -F: '!/\|/ { gsub(/[[:space:]]*/, "", $1); split($2, a, " "); printf("%s=%d ", $1, a[1]) }'`
+  
+  # Output entries for each interface
+  for entry in $IFACES; do
+    iface=`echo $entry | cut -d '=' -f 1`
+    bytes=`echo $entry | cut -d '=' -f 2`
+    
+    if [ "$iface" != "lo" ]; then
+      show_entry "iface.${iface}.bytes" $bytes
+    fi
+  done
+}
+
+#
+# Displays nodogsplash client statistics when available.
+#
+nds_stats()
+{
+  /usr/bin/ndsctl -s /var/run/nodogsplash.sock clients | awk -f /etc/nodewatcher/parse_nds.awk
+}
+
+#
+# Displays current solar module status when available.
+#
+solar_stats()
+{
+  for entry in "batvoltage solvoltage charge load state"; do
+    show_entry "solar.${entry}" "`/usr/bin/solar -d /dev/tts/1 -b 9600 -p ${entry} 2> /dev/null`"
+  done
+}
+
+# Output header and then all supported statistics
+echo ";"
+echo "; Wlan-Lj NodeWatcher Script"
+echo ";"
+
+general_stats
+traffic_stats
+
+# Check for nodogsplash support
+if [ -x /usr/bin/ndsctl ]; then
+  nds_stats
+fi
+
+# Check for solar support
+if [ -x /usr/bin/solar ]; then
+  solar_stats
+fi
