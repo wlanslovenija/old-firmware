@@ -14,8 +14,10 @@ BEGIN {
 
     if (field == "client_id") {
       in_client = 1
-    } else if (field == "ip" || field == "mac") {
+    } else if (field == "ip") {
       fields[field] = value
+    } else if (field == "mac") {
+      # MAC address is supressed
     } else if (field == "added") {
       fields["added_at"] = value
     } else if (field == "duration") {
