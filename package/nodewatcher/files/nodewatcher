@@ -37,15 +37,17 @@ general_stats()
 #
 traffic_stats()
 {
-  IFACES=`cat /proc/net/dev | awk -F: '!/\|/ { gsub(/[[:space:]]*/, "", $1); split($2, a, " "); printf("%s=%d ", $1, a[1]) }'`
+  IFACES=`cat /proc/net/dev | awk -F: '!/\|/ { gsub(/[[:space:]]*/, "", $1); split($2, a, " "); printf("%s=%d=%d ", $1, a[1], a[9]) }'`
   
   # Output entries for each interface
   for entry in $IFACES; do
     iface=`echo $entry | cut -d '=' -f 1`
-    bytes=`echo $entry | cut -d '=' -f 2`
+    rcv=`echo $entry | cut -d '=' -f 2`
+    xmt=`echo $entry | cut -d '=' -f 3`
     
     if [ "$iface" != "lo" ]; then
-      show_entry "iface.${iface}.bytes" $bytes
+      show_entry "iface.${iface}.down" $rcv
+      show_entry "iface.${iface}.up" $xmt
     fi
   done
 }
