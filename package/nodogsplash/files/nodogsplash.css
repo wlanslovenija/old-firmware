@@ -1,0 +1,66 @@
+#nodogsplash table {
+    font-size: 85%;
+}
+
+#nodogsplash td {
+    padding: 20px;
+    vertical-align: top;
+}
+
+#nodogsplash .info {
+    padding: 40px;
+    font-size: 130%;
+    color: #528f63;
+    text-align: center;
+    font-weight: bold;
+}
+
+#nodogsplash hr {
+    border: 1px solid #F3F5F3;
+    width: 250px;
+    margin: 30px auto;
+}
+
+#nodogsplash #footer {
+    text-align: center;
+    margin: 20px;
+    font-size: 90%;
+}
+
+#nodogsplash #main {
+    padding: 0px 30px;
+}
+
+#nodogsplash form {
+    text-align: center;
+    padding: 5px 0px;
+}
+
+#nodogsplash input {
+    background: transparent url(button.png) center center no-repeat;
+    height: 90px;
+    color: #528f63;
+    text-align: center;
+    font-weight: bold;
+    vertical-align: middle;
+    border: none;
+    cursor: pointer;
+}
+
+#nodogsplash .error h3 {
+    margin: 0px;
+}
+
+#nodogsplash .error h3 .label {
+    display: none;
+}
+
+#nodogsplash .error {
+    background-color: #F5F7F5;
+   -moz-border-radius-bottomleft:3px;
+   -moz-border-radius-bottomright:3px;
+   -moz-border-radius-topleft:3px;
+   -moz-border-radius-topright:3px;
+    border: none;
+    padding: 20px;
+}
