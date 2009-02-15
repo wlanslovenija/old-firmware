@@ -10,12 +10,13 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=olsrd
 PKG_VERSION:=0.5.6-r3
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=http://www.olsr.org/releases/0.5
 PKG_MD5SUM:=0935688fa0fb5b0e073fe53ec654c5b2
+PKG_PLUGINS_DIR?=./plugins
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -79,12 +80,20 @@ define Package/olsrd-mod-txtinfo
   TITLE:=Small informative web server plugin
 endef
 
+define Package/olsrd-mod-actions
+  $(call Package/olsrd/template)
+  DEPENDS:=olsrd
+  TITLE:=A plugin for triggering actions on route changes
+endef
+
 define Build/Configure
 endef
 
 define Build/Compile
 	rm -rf $(PKG_INSTALL_DIR)
 	mkdir -p $(PKG_INSTALL_DIR)
+	rm -rf $(PKG_BUILD_DIR)/lib/actions
+	cp -r $(PKG_PLUGINS_DIR)/actions $(PKG_BUILD_DIR)/lib/actions
 	$(MAKE) -C "$(PKG_BUILD_DIR)" \
 		$(TARGET_CONFIGURE_OPTS) \
 		NODEBUG=1 \
@@ -97,7 +106,7 @@ define Build/Compile
 		MANDIR="$(PKG_INSTALL_DIR)/usr/share/man" \
 		STRIP="true" \
 		INSTALL_LIB="true" \
-		SUBDIRS="bmf dot_draw dyn_gw httpinfo nameservice secure txtinfo" \
+		SUBDIRS="bmf dot_draw dyn_gw httpinfo nameservice secure txtinfo actions" \
 		all libs install install_libs
 endef
 
@@ -145,6 +154,11 @@ define Package/olsrd-mod-txtinfo/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lib/txtinfo/olsrd_txtinfo.so.* $(1)/usr/lib/
 endef
 
+define Package/olsrd-mod-actions/install
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lib/actions/olsrd_actions.so.* $(1)/usr/lib/
+endef
+
 $(eval $(call BuildPackage,olsrd))
 $(eval $(call BuildPackage,olsrd-mod-dot-draw))
 $(eval $(call BuildPackage,olsrd-mod-bmf))
@@ -153,3 +167,4 @@ $(eval $(call BuildPackage,olsrd-mod-httpinfo))
 $(eval $(call BuildPackage,olsrd-mod-nameservice))
 $(eval $(call BuildPackage,olsrd-mod-secure))
 $(eval $(call BuildPackage,olsrd-mod-txtinfo))
+$(eval $(call BuildPackage,olsrd-mod-actions))
