@@ -58,8 +58,9 @@ define Package/nodogsplash/install
 	$(INSTALL_BIN) ./files/nodogsplash.init $(1)/etc/init.d/nodogsplash
 	$(INSTALL_DIR) $(1)/etc/nodogsplash
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs
-	$(CP) ./files/infoskel.html $(1)/etc/nodogsplash/htdocs/
-	$(CP) ./files/splash.html $(1)/etc/nodogsplash/htdocs/
+	$(CP) ./files/*.html $(1)/etc/nodogsplash/htdocs/
+	$(CP) ./files/*.css $(1)/etc/nodogsplash/htdocs/
+	$(CP) ./files/*.png $(1)/etc/nodogsplash/htdocs/
 endef
 
 $(eval $(call BuildPackage,nodogsplash))
