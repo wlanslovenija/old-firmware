@@ -72,7 +72,7 @@ solar_stats()
 
 # Output header and then all supported statistics
 echo ";"
-echo "; Wlan-Lj NodeWatcher Script"
+echo "; wlan ljubljana NodeWatcher Script"
 echo ";"
 
 general_stats
