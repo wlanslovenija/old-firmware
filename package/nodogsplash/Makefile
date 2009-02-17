@@ -23,7 +23,7 @@ define Package/nodogsplash
   SUBMENU:=Captive Portals
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+libpthread +iptables-mod-ipopt
+  DEPENDS:=+libpthread +iptables-mod-ipopt +cronscripts
   TITLE:=Open public network gateway daemon
   URL:=http://kokoro.ucsd.edu/nodogsplash/
 endef
@@ -61,6 +61,8 @@ define Package/nodogsplash/install
 	$(CP) ./files/*.html $(1)/etc/nodogsplash/htdocs/
 	$(CP) ./files/*.css $(1)/etc/nodogsplash/htdocs/
 	$(CP) ./files/*.png $(1)/etc/nodogsplash/htdocs/
+	$(INSTALL_DIR) $(1)/etc/crontabs/run.daily
+	$(INSTALL_BIN) ./files/whitelist-pull.sh $(1)/etc/crontabs/run.daily
 endef
 
 $(eval $(call BuildPackage,nodogsplash))
