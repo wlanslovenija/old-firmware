@@ -71,7 +71,8 @@ start() {
 	iptables -A INPUT -p udp --dport 53 -j ACCEPT
 	
 	# Allows captive portal
-	iptables -A INPUT $WIFI_IN -p tcp --dport 2050 -j ACCEPT
+	# (This is already handled by captive portal itself)
+	#iptables -A INPUT $WIFI_IN -p tcp --dport 2050 -j ACCEPT
 	
 	# Allows DHCP (broadcast)
 	iptables -A INPUT -i $WIFI_DEV -p udp --sport 68 --dport 67 -j ACCEPT
