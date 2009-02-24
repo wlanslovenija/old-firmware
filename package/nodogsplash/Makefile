@@ -49,6 +49,13 @@ define Build/Compile
 		install
 endef
 
+define Build/InstallDev
+	mkdir -p $(1)/usr/include
+	$(CP) $(PKG_INSTALL_DIR)/usr/include/nodogsplash/httpd.h $(1)/usr/include/
+	mkdir -p $(1)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libhttpd.{a,so*} $(1)/usr/lib/
+endef
+
 define Package/nodogsplash/install	
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/* $(1)/usr/bin/
