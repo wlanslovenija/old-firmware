@@ -9,14 +9,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodogsplash
-PKG_REAL_VERSION:=0.9_beta9.8
+PKG_REAL_VERSION:=0.9_beta9.9.1
 PKG_VERSION:=$(PKG_REAL_VERSION)_wlanlj
 PKG_RELEASE:=5
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_REAL_VERSION).tar.gz
 PKG_SOURCE_URL:=http://kokoro.ucsd.edu/nodogsplash/ \
 	http://kokoro.ucsd.edu/nodogsplash/old/
-PKG_MD5SUM:=a8d22ed9dc321fb7b79b98bbc626c733
+PKG_MD5SUM:=f16d6de1d27a49968915b6d98005e03f
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_REAL_VERSION)
 PKG_INSTALL_DIR:=$(PKG_BUILD_DIR)/ipkg-install
@@ -51,6 +51,13 @@ define Build/Compile
 		DESTDIR="$(PKG_INSTALL_DIR)" \
 		mkinstalldirs="$(SHELL) $(PKG_BUILD_DIR)/config/mkinstalldirs" \
 		install
+endef
+
+define Build/InstallDev
+	mkdir -p $(1)/usr/include
+	$(CP) $(PKG_INSTALL_DIR)/usr/include/nodogsplash/httpd.h $(1)/usr/include/
+	mkdir -p $(1)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libhttpd.{a,so*} $(1)/usr/lib/
 endef
 
 define Package/nodogsplash/install	
