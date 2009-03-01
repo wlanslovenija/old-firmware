@@ -10,14 +10,14 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodewatcher
 PKG_VERSION:=0.1
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/nodewatcher
   SECTION:=utils
   CATEGORY:=Utilities
-  DEPENDS:=+busybox
+  DEPENDS:=+busybox +cronscripts
   TITLE:=NodeWatcher
 endef
 
@@ -35,6 +35,8 @@ define Package/nodewatcher/install
 	$(INSTALL_BIN) ./files/nodewatcher $(1)/www/cgi-bin
 	$(INSTALL_DIR) $(1)/etc/nodewatcher
 	$(CP) ./files/parse_nds.awk $(1)/etc/nodewatcher
+	$(INSTALL_DIR) $(1)/etc/crontabs/run.30
+	$(CP) ./files/solar_measure $(1)/etc/crontabs/run.30
 endef
 
 $(eval $(call BuildPackage,nodewatcher))

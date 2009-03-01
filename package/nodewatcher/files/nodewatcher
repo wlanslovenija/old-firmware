@@ -3,6 +3,9 @@
 # NodeWatcher cgi-bin script
 # 
 
+# Configuration
+SOLAR_MEASURE_CACHE="/var/nodewatcher.solar_measure"
+
 #
 # A helper function for outputing key-value pairs in proper
 # format.
@@ -65,6 +68,13 @@ nds_stats()
 #
 solar_stats()
 {
+  if [ -f $SOLAR_MEASURE_CACHE ]; then
+    cat $SOLAR_MEASURE_CACHE
+  fi
+}
+
+solar_measure_stats()
+{
   STATS="batvoltage solvoltage charge load state"
   if [ -c /dev/ttyS1 ]; then
     DEVICE="/dev/ttyS1"
@@ -77,20 +87,30 @@ solar_stats()
   done
 }
 
-# Output header and then all supported statistics
-echo ";"
-echo "; wlan ljubljana NodeWatcher Script"
-echo ";"
+# Arguments
+mode="$1"
 
-general_stats
-traffic_stats
-
-# Check for nodogsplash support
-if [ -x /usr/bin/ndsctl ]; then
-  nds_stats
-fi
-
-# Check for solar support
-if [ -x /usr/bin/solar ]; then
-  solar_stats
+if [ "$mode" == "" ]; then
+  # Output header and then all supported statistics
+  echo ";"
+  echo "; wlan ljubljana NodeWatcher Script"
+  echo ";"
+  
+  general_stats
+  traffic_stats
+  
+  # Check for nodogsplash support
+  if [ -x /usr/bin/ndsctl ]; then
+    nds_stats
+  fi
+  
+  # Check for solar support
+  if [ -x /usr/bin/solar ]; then
+    solar_stats
+  fi
+elif [ "$mode" == "solar_measure" ]; then
+  # Check for solar support
+  if [ -x /usr/bin/solar ]; then
+    solar_measure_stats > $SOLAR_MEASURE_CACHE
+  fi
 fi
