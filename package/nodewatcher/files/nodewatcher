@@ -66,8 +66,14 @@ nds_stats()
 solar_stats()
 {
   STATS="batvoltage solvoltage charge load state"
+  if [ -c /dev/ttyS1 ]; then
+    DEVICE="/dev/ttyS1"
+  else
+    DEVICE="/dev/tts/1"
+  fi
+  
   for entry in $STATS; do
-    show_entry "solar.${entry}" "`/usr/bin/solar -d /dev/tts/1 -b 9600 -p ${entry} 2> /dev/null`"
+    show_entry "solar.${entry}" "`/usr/bin/solar -d ${DEVICE} -b 9600 -p ${entry} 2> /dev/null`"
   done
 }
 
