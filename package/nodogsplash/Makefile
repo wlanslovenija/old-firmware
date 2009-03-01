@@ -23,7 +23,7 @@ define Package/nodogsplash
   SUBMENU:=Captive Portals
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+libpthread +iptables-mod-ipopt +iptables-mod-conntrack +cronscripts
+  DEPENDS:=+libpthread +iptables-mod-ipopt +iptables-mod-conntrack +iptables-mod-nat +cronscripts
   TITLE:=Open public network gateway daemon
   URL:=http://kokoro.ucsd.edu/nodogsplash/
 endef
