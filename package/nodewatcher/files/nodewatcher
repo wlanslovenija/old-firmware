@@ -70,6 +70,9 @@ solar_stats()
 {
   if [ -f $SOLAR_MEASURE_CACHE ]; then
     cat $SOLAR_MEASURE_CACHE
+  else
+    solar_measure_stats > $SOLAR_MEASURE_CACHE
+    cat $SOLAR_MEASURE_CACHE
   fi
 }
 
