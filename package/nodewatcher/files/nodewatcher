@@ -45,7 +45,7 @@ traffic_stats()
     rcv=`echo $entry | cut -d '=' -f 2`
     xmt=`echo $entry | cut -d '=' -f 3`
     
-    if [ "$iface" != "lo" ]; then
+    if [[ "$iface" != "lo" && "$iface" != "wmaster0" ]]; then
       show_entry "iface.${iface}.down" $rcv
       show_entry "iface.${iface}.up" $xmt
     fi
@@ -65,7 +65,8 @@ nds_stats()
 #
 solar_stats()
 {
-  for entry in "batvoltage solvoltage charge load state"; do
+  STATS="batvoltage solvoltage charge load state"
+  for entry in $STATS; do
     show_entry "solar.${entry}" "`/usr/bin/solar -d /dev/tts/1 -b 9600 -p ${entry} 2> /dev/null`"
   done
 }
