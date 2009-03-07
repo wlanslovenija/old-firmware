@@ -10,7 +10,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodewatcher
 PKG_VERSION:=0.1
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -33,6 +33,7 @@ endef
 define Package/nodewatcher/install
 	$(INSTALL_DIR) $(1)/www/cgi-bin
 	$(INSTALL_BIN) ./files/nodewatcher $(1)/www/cgi-bin
+	$(INSTALL_BIN) ./files/opkgwatcher $(1)/www/cgi-bin
 	$(INSTALL_DIR) $(1)/etc/nodewatcher
 	$(CP) ./files/parse_nds.awk $(1)/etc/nodewatcher
 	$(INSTALL_DIR) $(1)/etc/crontabs/run.30
