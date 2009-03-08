@@ -11,15 +11,15 @@ start() {
 	config_get LAN_IF lan ifname
 	config_get LANMESH_IF lanmesh ifname
 	config_get WAN_IF wan ifname
-	config_get FALLBACK_IF fallback ifname
+	config_get FALLBACK_IF wanfallback ifname
 	
 	config_get WIFI_ADDR subnet0 ipaddr
 	config_get LAN_ADDR lan ipaddr
-	config_get FALLBACK_ADDR fallback ipaddr
+	config_get FALLBACK_ADDR wanfallback ipaddr
 	
 	config_get WIFI_MASK subnet0 netmask
 	config_get LAN_MASK lan netmask
-	config_get FALLBACK_MASK fallback netmask
+	config_get FALLBACK_MASK wanfallback netmask
 	
 	WIFI_DEV=${WIFI_IF%%:*}
 	MESH_DEV=${MESH_IF%%:*}
