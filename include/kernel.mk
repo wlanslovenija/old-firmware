@@ -76,7 +76,7 @@ define ModuleAutoLoad
 			for mod in $$$$$$$$2; do \
 				getvar mod; \
 			done \
-		) > $(2)/etc/modules.d/$$$$$$$$1-$(1); \
+		) | sed -e 's|/| |g' > $(2)/etc/modules.d/$$$$$$$$1-$(1); \
 		modules="$$$$$$$${modules:+$$$$$$$$modules }$$$$$$$$1-$(1)"; \
 	}; \
 	$(3) \
