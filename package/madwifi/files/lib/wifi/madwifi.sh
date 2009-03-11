@@ -42,7 +42,7 @@ scan_atheros() {
 		*) echo "$device: Invalid mode combination in config"; return 1;;
 	esac
 
-	config_set "$device" vifs "${sta:+$sta }${ap:+$ap }${adhoc:+$adhoc }${ahdemo:+$ahdemo }${wds:+$wds }${monitor:+$monitor}"
+	config_set "$device" vifs "${ap:+$ap }${adhoc:+$adhoc }${ahdemo:+$ahdemo }${sta:+$sta }${wds:+$wds }${monitor:+$monitor}"
 }
 
 
@@ -67,23 +67,15 @@ disable_atheros() (
 
 enable_atheros() {
 	local device="$1"
-	# Can only set the country code to one setting for the entire system. The last country code is the one that will be applied.
-	config_get country "$device" country
-	[ -z "$country" ] && country="0"
-	local cc="0"
-	[ -e /proc/sys/dev/$device/countrycode ] && cc="$(cat /proc/sys/dev/$device/countrycode)"
-	if [ ! "$cc" = "$country" ] ; then
-		rmmod ath_pci
-		insmod ath_pci countrycode=$country
-	fi
 	config_get channel "$device" channel
 	config_get vifs "$device" vifs
+	config_get txpower "$device" txpower
 
 	[ auto = "$channel" ] && channel=0
 
 	local first=1
 	for vif in $vifs; do
-		local start_hostapd
+		local start_hostapd vif_txpower
 		nosbeacon=
 		config_get ifname "$vif" ifname
 		config_get enc "$vif" encryption
@@ -220,6 +212,9 @@ enable_atheros() {
 		config_get distance "$device" distance
 		[ -n "$distance" ] && athctrl -i "$device" -d "$distance" >&-
 
+		config_get txpwr "$vif" txpower
+		[ -n "$txpwr" ] && iwconfig "$ifname" txpower "${txpwr%%.*}"
+
 		config_get rate "$vif" rate
 		[ -n "$rate" ] && iwconfig "$ifname" rate "${rate%%.*}"
 
@@ -286,7 +281,6 @@ enable_atheros() {
 		esac
 
 		ifconfig "$ifname" up
-
 		local net_cfg bridge
 		net_cfg="$(find_net_config "$vif")"
 		[ -z "$net_cfg" ] || {
@@ -299,8 +293,14 @@ enable_atheros() {
 		set_wifi_up "$vif" "$ifname"
 
 		# TXPower settings only work if device is up already
-		config_get txpwr "$vif" txpower
-		[ -n "$txpwr" ] && iwconfig "$ifname" txpower "${txpwr%%.*}"
+		# while atheros hardware theoretically is capable of per-vif (even per-packet) txpower
+		# adjustment it does not work with the current atheros hal/madwifi driver
+
+		config_get vif_txpower "$vif" txpower
+		# use vif_txpower (from wifi-iface) instead of txpower (from wifi-device) if
+		# the latter doesn't exist
+		txpower="${txpower:-$vif_txpower}"
+		[ -z "$txpower" ] || iwconfig "$ifname" txpower "${txpower%%.*}"
 
 		case "$mode" in
 			ap)
