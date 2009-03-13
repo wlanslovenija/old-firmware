@@ -123,6 +123,8 @@ enable_broadcom() {
 	config_get macfilter "$device" macfilter
 	config_get maclist "$device" maclist
 	config_get macaddr "$device" macaddr
+	config_get frag "$device" frag
+	config_get rts "$device" rts
 	local vif_pre_up vif_post_up vif_do_up txpower
 
 	_c=0
@@ -283,6 +285,8 @@ ${wet:+wet 1}
 802.11h 0
 rxant ${rxantenna:-3}
 txant ${txantenna:-3}
+fragthresh ${frag:-2346}
+rtsthresh ${rts:-2347}
 monitor ${monitor:-0}
 passive ${passive:-0}
 
