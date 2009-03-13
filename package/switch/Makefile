@@ -14,15 +14,31 @@ PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
 
+ifeq ($(BOARD),brcm-2.4)
+  BUILDFLAGS := -DBROADCOM -DBCMDRIVER -I$(LINUX_DIR)/arch/mips/bcm947xx/include
+  ADM_SWITCH := 1
+else
+  ifeq ($(BOARD),brcm47xx)
+    BUILDFLAGS := -DBROADCOM
+    ADM_SWITCH := 1
+  else
+    ADM_SWITCH := 0
+  endif
+endif
+
 define KernelPackage/switch
   SUBMENU:=Other modules
-  DEPENDS:=@TARGET_brcm_2_4||TARGET_brcm47xx
   TITLE:=Switch drivers
   FILES:= \
 	$(PKG_BUILD_DIR)/switch-core.$(LINUX_KMOD_SUFFIX) \
-	$(PKG_BUILD_DIR)/switch-adm.$(LINUX_KMOD_SUFFIX) \
+	$(PKG_BUILD_DIR)/switch-ip175c.$(LINUX_KMOD_SUFFIX) \
 	$(PKG_BUILD_DIR)/switch-robo.$(LINUX_KMOD_SUFFIX)
-  AUTOLOAD:=$(call AutoLoad,20,switch-core switch-robo switch-adm)
+  ifeq ($(ADM_SWITCH),1)
+    AUTOLOAD:=$(call AutoLoad,20,switch-core switch-robo switch-ip175c switch-adm)
+    FILES += $(PKG_BUILD_DIR)/switch-adm.$(LINUX_KMOD_SUFFIX)
+  else
+    AUTOLOAD:=$(call AutoLoad,20,switch-core switch-robo switch-ip175c)
+  endif
 endef
 
 define KernelPackage/switch/description
@@ -34,21 +50,13 @@ define Build/Prepare
 	$(CP) ./src/* $(PKG_BUILD_DIR)/
 endef
 
-ifeq ($(BOARD),brcm-2.4)
-  BUILDFLAGS := -DBROADCOM -DBCMDRIVER -I$(LINUX_DIR)/arch/mips/bcm947xx/include
-else
-  ifeq ($(BOARD),brcm47xx)
-    BUILDFLAGS := -DBROADCOM
-  endif
-endif
-
-
 define Build/Compile
 	$(MAKE) -C "$(LINUX_DIR)" \
 		CROSS_COMPILE="$(TARGET_CROSS)" \
 		ARCH="$(LINUX_KARCH)" \
 		SUBDIRS="$(PKG_BUILD_DIR)" \
 		EXTRA_CFLAGS="$(BUILDFLAGS)" \
+		ADM_SWITCH="$(ADM_SWITCH)" \
 		modules
 endef
 
