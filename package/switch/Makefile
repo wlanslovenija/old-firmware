@@ -31,13 +31,14 @@ define KernelPackage/switch
   TITLE:=Switch drivers
   FILES:= \
 	$(PKG_BUILD_DIR)/switch-core.$(LINUX_KMOD_SUFFIX) \
-	$(PKG_BUILD_DIR)/switch-ip175c.$(LINUX_KMOD_SUFFIX) \
 	$(PKG_BUILD_DIR)/switch-robo.$(LINUX_KMOD_SUFFIX)
+
   ifeq ($(ADM_SWITCH),1)
-    AUTOLOAD:=$(call AutoLoad,20,switch-core switch-robo switch-ip175c switch-adm)
+    AUTOLOAD:=$(call AutoLoad,20,switch-core switch-robo switch-adm)
     FILES += $(PKG_BUILD_DIR)/switch-adm.$(LINUX_KMOD_SUFFIX)
   else
     AUTOLOAD:=$(call AutoLoad,20,switch-core switch-robo switch-ip175c)
+    FILES += $(PKG_BUILD_DIR)/switch-ip175c.$(LINUX_KMOD_SUFFIX)
   endif
 endef
 

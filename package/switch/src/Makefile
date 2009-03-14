@@ -10,9 +10,11 @@
 # 2 of the License, or (at your option) any later version.
 #
 
-obj-m	:= switch-core.o switch-ip175c.o switch-robo.o
+obj-m	:= switch-core.o switch-robo.o
 ifeq ($(ADM_SWITCH),1)
   obj-m	+= switch-adm.o
+else
+  obj-m += switch-ip175c.o
 endif
 
 ifeq ($(MAKING_MODULES),1)
