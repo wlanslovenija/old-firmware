@@ -87,6 +87,7 @@ static ssize_t switch_proc_read(struct file *file, char *buf, size_t count, loff
 		if (handler->handler.read != NULL)
 			len += handler->handler.read(handler->driver, page + len, handler->nr);
 	}
+	len += 1;
 
 	if (*ppos < len) {
 		len = min_t(int, len - *ppos, count);
@@ -462,8 +463,6 @@ void switch_unregister_driver(char *name) {
 		if (strcmp(tmp->name, name) == 0) {
 			do_unregister(tmp);
 			list_del(pos);
-			if (tmp->cleanup)
-				tmp->cleanup(tmp);
 			kfree(tmp->name);
 			kfree(tmp);
 

@@ -1201,7 +1201,7 @@ CONFIG_PACKAGE_kmod-softdog=m
 # CONFIG_PACKAGE_kmod-spi-gpio is not set
 # CONFIG_PACKAGE_kmod-spi-ks8995 is not set
 # CONFIG_PACKAGE_kmod-ssb is not set
-CONFIG_PACKAGE_kmod-switch=m
+# CONFIG_PACKAGE_kmod-switch is not set
 
 #
 # Sound Support

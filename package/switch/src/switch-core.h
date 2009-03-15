@@ -35,7 +35,6 @@ typedef struct {
 	const switch_config *driver_handlers, *port_handlers, *vlan_handlers;
 	void *data;
 	void *priv;
-	void (*cleanup)(void *driver);
 } switch_driver;
 
 typedef struct {
