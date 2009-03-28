@@ -3,5 +3,9 @@
 
 START=97
 start() {
-        [ -c /dev/watchdog ] && watchdog -t 5 /dev/watchdog
+	if [ -c /dev/watchdog ]; then
+		watchdog -t 5 /dev/watchdog
+	elif [ -c /dev/misc/watchdog ]; then
+		watchdog -t 5 /dev/misc/watchdog
+	fi
 }
