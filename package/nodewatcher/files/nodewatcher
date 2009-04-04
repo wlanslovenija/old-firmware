@@ -28,6 +28,8 @@ general_stats()
   show_entry "general.version" "`cat /etc/version`"
   show_entry "general.local_time" "`date +%s`"
   show_entry "general.uptime" "`cat /proc/uptime`"
+  show_entry "general.loadavg" "`cat /proc/loadavg`"
+  show_entry "general.memfree" "`cat /proc/meminfo | awk '/^MemFree/ { print $2 }'`"
   
   # Wireless parameters
   show_entry "wifi.bssid" "`iwconfig 2>/dev/null | grep Cell | awk '{ print $5 }'`"
