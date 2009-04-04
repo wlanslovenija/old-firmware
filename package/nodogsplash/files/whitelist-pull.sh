@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+trap 'killall ndsctl; exit' INT QUIT TERM EXIT
+
 NDSCTL="/usr/bin/ndsctl -s /var/run/nodogsplash.sock"
 WHITELIST_URL="http://10.14.0.2/feeds/whitelist"
 WHITELIST="`wget -q -O - ${WHITELIST_URL} 2>/dev/null`"
