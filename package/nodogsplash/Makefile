@@ -9,13 +9,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodogsplash
-PKG_VERSION:=0.9_beta9.9.1
-PKG_RELEASE:=5
+PKG_VERSION:=0.9_beta9.9.3
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://kokoro.ucsd.edu/nodogsplash/ \
 	http://kokoro.ucsd.edu/nodogsplash/old/
-PKG_MD5SUM:=f16d6de1d27a49968915b6d98005e03f
+PKG_MD5SUM:=513df106cb390beaa281f954d5311591
 
 include $(INCLUDE_DIR)/package.mk
 
