@@ -42,7 +42,7 @@ general_stats()
 #
 traffic_stats()
 {
-  IFACES=`cat /proc/net/dev | awk -F: '!/\|/ { gsub(/[[:space:]]*/, "", $1); split($2, a, " "); printf("%s=%d=%d ", $1, a[1], a[9]) }'`
+  IFACES=`cat /proc/net/dev | awk -F: '!/\|/ { gsub(/[[:space:]]*/, "", $1); split($2, a, " "); printf("%s=%s=%s ", $1, a[1], a[9]) }'`
   
   # Output entries for each interface
   for entry in $IFACES; do
