@@ -185,6 +185,9 @@ define Package/base-files$(TARGET)/install
 				echo "$$$${conffile##$(1)}" >> $(1)/CONTROL/conffiles; \
 		fi \
 	done
+
+# Update version
+	echo "r$(shell svnversion -n .)" > $(1)/etc/version
 endef
 
 define Package/libgcc/install
