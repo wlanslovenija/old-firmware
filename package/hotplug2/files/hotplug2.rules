@@ -4,7 +4,12 @@ SUBSYSTEM ~~ (net|button|usb) {
 	exec /sbin/hotplug-call %SUBSYSTEM%;
 }
 
-DEVICENAME ~~ (watchdog) {
+DEVPATH == /dev/watchdog {
 	exec /sbin/watchdog -t 5 /dev/watchdog;
+	next
+}
+
+DEVPATH == /dev/misc/watchdog {
+	exec /sbin/watchdog -t 5 /dev/misc/watchdog;
 	next
 }

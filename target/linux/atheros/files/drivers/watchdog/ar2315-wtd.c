@@ -17,6 +17,7 @@
  * Based on EP93xx and ifxmips wdt driver
  */
 
+#include <linux/errno.h>
 #include <linux/interrupt.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
@@ -42,6 +43,7 @@
 static int wdt_timeout = 20;
 static int started = 0;
 static int in_use = 0;
+static int got_magic = 0;
 
 static void
 ar2315_wdt_enable(void)
@@ -54,7 +56,22 @@ static ssize_t
 ar2315_wdt_write(struct file *file, const char __user *data, size_t len, loff_t *ppos)
 {
 	if(len)
+	{
 		ar2315_wdt_enable();
+		got_magic = 0;
+
+		size_t i;
+		for(i = 0; i != len; i++)
+		{
+			char c;
+
+			if(get_user(c, data + i))
+				return -EFAULT;
+
+			if(c == 'V')
+				got_magic = 1;
+		}
+	}
 	return len;
 }
 
@@ -65,6 +82,7 @@ ar2315_wdt_open(struct inode *inode, struct file *file)
 		return -EBUSY;
 	ar2315_wdt_enable();
 	in_use = started = 1;
+	got_magic = 0;
 	return nonseekable_open(inode, file);
 }
 
@@ -72,6 +90,15 @@ static int
 ar2315_wdt_release(struct inode *inode, struct file *file)
 {
 	in_use = 0;
+	if(got_magic)
+	{
+		printk(KERN_INFO "ar2315_wdt: disabling watchdog with magic");
+		started = 0;
+		got_magic = 0;
+		sysRegWrite(AR5315_WDC, 0);
+		sysRegWrite(AR5315_WD, 0);
+		sysRegWrite(AR5315_ISR, 0x80);
+	}
 	return 0;
 }
 
