@@ -146,11 +146,6 @@ start() {
 	[ -n "$WAN_IF" ] && iptables -A INPUT -i $WAN_DEV -p udp -s $VPN_HOST1 --sport $VPN_PORT -j ACCEPT
 	[ -n "$WAN_IF" ] && iptables -A INPUT -i $WAN_DEV -p udp -s $VPN_HOST2 --sport $VPN_PORT -j ACCEPT
 	
-	### ROUTING ###
-			
-	iptables -t mangle -A PREROUTING -d $VPN_HOST1 -j MARK --or-mark 0x100000
-	iptables -t mangle -A PREROUTING -d $VPN_HOST2 -j MARK --or-mark 0x100000
-	
 	echo 1 > /proc/sys/net/ipv4/ip_forward
 }
 stop() {
