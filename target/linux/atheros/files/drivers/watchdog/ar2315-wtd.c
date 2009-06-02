@@ -83,6 +83,7 @@ ar2315_wdt_open(struct inode *inode, struct file *file)
 	ar2315_wdt_enable();
 	in_use = started = 1;
 	got_magic = 0;
+	printk(KERN_INFO "ar2315_wdt: enabling watchdog\n");
 	return nonseekable_open(inode, file);
 }
 
@@ -92,7 +93,7 @@ ar2315_wdt_release(struct inode *inode, struct file *file)
 	in_use = 0;
 	if(got_magic)
 	{
-		printk(KERN_INFO "ar2315_wdt: disabling watchdog with magic");
+		printk(KERN_INFO "ar2315_wdt: disabling watchdog with magic\n");
 		started = 0;
 		got_magic = 0;
 		sysRegWrite(AR5315_WDC, 0);
@@ -107,7 +108,7 @@ ar2315_wdt_interrupt(int irq, void *dev_id)
 {
 	if(started)
 	{
-		printk(KERN_CRIT "watchdog expired, rebooting system\n");
+		printk(KERN_CRIT "ar2315_wdt: watchdog expired, rebooting system\n");
 		emergency_restart();
 	} else {
 		sysRegWrite(AR5315_WDC, 0);
@@ -211,7 +212,7 @@ init_ar2315_wdt(void)
 {
 	int ret = platform_driver_register(&ar2315_wdt_driver);
 	if(ret)
-		printk(KERN_INFO "ar2315_wdt: error registering platfom driver!");
+		printk(KERN_ERR "ar2315_wdt: error registering platfom driver!\n");
 	return ret;
 }
 
