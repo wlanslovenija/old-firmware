@@ -34,10 +34,6 @@ define Package/olsrd
   DEPENDS:=+libpthread
 endef
 
-define Package/olsrd/conffiles
-/etc/olsrd.conf
-endef
-
 define Package/olsrd-mod-dot-draw
   $(call Package/olsrd/template)
   DEPENDS:=olsrd
