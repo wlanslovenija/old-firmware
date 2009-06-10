@@ -111,8 +111,6 @@ define Build/Compile
 endef
 
 define Package/olsrd/install
-	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/src/cfgparser/olsrd.conf.example $(1)/etc/olsrd.conf
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/olsrd $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/etc/init.d
