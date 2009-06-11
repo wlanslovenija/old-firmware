@@ -36,7 +36,7 @@ general_stats()
   # Wireless parameters
   show_entry "wifi.bssid" "`iwconfig 2>/dev/null | grep Cell | awk '{ print $5 }'`"
   show_entry "wifi.essid" "`iwconfig 2>/dev/null | grep ESSID | awk '{ split($4, a, \"\\"\"); printf(\"%s\", a[2]); }'`"
-  show_entry "wifi.frequency" "`iwconfig 2>/dev/null | grep Frequency | awk '{ print $2 }' | cut -d ':' -f 2`"
+  show_entry "wifi.frequency" "`iwconfig 2>/dev/null | grep Frequency | awk '{ print $2 }' | cut -d ':' -f 2 | head -n 1`"
 }
 
 #
