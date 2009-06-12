@@ -31,7 +31,7 @@ endef
 define Build/Compile
 endef
 
-define Package/netprofcripts/install
+define Package/netprofscripts/install
 	$(INSTALL_DIR) $(1)/www/cgi-bin
 	$(INSTALL_BIN) ./files/httpd.urandom $(1)/www/cgi-bin/urandom
 	$(INSTALL_BIN) ./files/httpd.zero $(1)/www/cgi-bin/zero
