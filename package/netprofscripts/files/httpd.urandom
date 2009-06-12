@@ -2,4 +2,3 @@
 echo "Content-type: application/octet-stream"
 echo
 cat /dev/urandom
-

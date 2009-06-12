@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ -z "$1" -o -z "$2" ]; then
+	echo "$0 <hostname> <path>"
+	echo "  <hostname>  hostname of the HTTP server"
+	echo "  <path>      path on the HTTP server to send stdin to"
+	exit 1
+fi
+
+(echo -e "POST $2 HTTP/1.0\nContent-Type: application/octet-stream\nContent-Length: 1073741824\n"; cat) | nc "$1" 80

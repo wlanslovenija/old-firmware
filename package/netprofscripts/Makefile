@@ -33,8 +33,11 @@ endef
 
 define Package/netprofscripts/install
 	$(INSTALL_DIR) $(1)/www/cgi-bin
+	$(INSTALL_BIN) ./files/httpd.null $(1)/www/cgi-bin/null
 	$(INSTALL_BIN) ./files/httpd.urandom $(1)/www/cgi-bin/urandom
 	$(INSTALL_BIN) ./files/httpd.zero $(1)/www/cgi-bin/zero
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) ./files/wput $(1)/usr/bin/wput
 endef
 
 $(eval $(call BuildPackage,netprofscripts))
