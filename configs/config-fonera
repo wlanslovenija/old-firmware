@@ -1009,6 +1009,8 @@ CONFIG_PACKAGE_olsrd-mod-txtinfo=y
 # CONFIG_PACKAGE_tc is not set
 # CONFIG_PACKAGE_wpa-supplicant is not set
 CONFIG_PACKAGE_tcpdump=y
+CONFIG_PACKAGE_netprofscripts=y
+CONFIG_PACKAGE_pv=y
 
 #
 # Libraries
