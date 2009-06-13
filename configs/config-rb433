@@ -978,7 +978,6 @@ CONFIG_PACKAGE_liblzo=y
 # CONFIG_PACKAGE_libncurses is not set
 # CONFIG_PACKAGE_libnl is not set
 CONFIG_PACKAGE_libopenssl=y
-# CONFIG_PACKAGE_libpcap is not set
 # CONFIG_PACKAGE_libreadline is not set
 CONFIG_PACKAGE_libuci=y
 # CONFIG_PACKAGE_libuci-lua is not set
@@ -1032,6 +1031,7 @@ CONFIG_PACKAGE_olsrd-mod-txtinfo=y
 CONFIG_PACKAGE_tcpdump=y
 CONFIG_PACKAGE_netprofscripts=y
 CONFIG_PACKAGE_pv=y
+CONFIG_PACKAGE_libpcap=y
 
 #
 # IPv6
