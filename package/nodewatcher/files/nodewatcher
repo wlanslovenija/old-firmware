@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 #
 # NodeWatcher cgi-bin script
 # 
@@ -64,7 +64,13 @@ traffic_stats()
 #
 nds_stats()
 {
-  /usr/bin/ndsctl -s /var/run/nodogsplash.sock clients | awk -f /etc/nodewatcher/parse_nds.awk
+  /usr/bin/ndsctl -s /var/run/nodogsplash.sock status >/dev/null 2>/dev/null
+
+  if [ "$?" == "0" ]; then
+    /usr/bin/ndsctl -s /var/run/nodogsplash.sock clients | awk -f /etc/nodewatcher/parse_nds.awk
+  else
+    show_entry "nds.down" 1
+  fi
 }
 
 #

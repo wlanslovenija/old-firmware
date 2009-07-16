@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ -x /usr/bin/ndsctl ]; then
+  ndsctl -s /var/run/nodogsplash.sock status >/dev/null
+
+  if [ "$?" == "1" ]; then
+    # Nodogsplash failure detected, attempt forced restart
+    killall -9 nodogsplash
+    /etc/init.d/nodogsplash start
+  fi
+fi
+

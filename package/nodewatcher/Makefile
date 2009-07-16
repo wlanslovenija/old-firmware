@@ -10,7 +10,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodewatcher
 PKG_VERSION:=0.1
-PKG_RELEASE:=10
+PKG_RELEASE:=11
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -40,6 +40,7 @@ define Package/nodewatcher/install
 	$(INSTALL_BIN) ./files/solar_measure $(1)/etc/crontabs/run.30
 	$(INSTALL_DIR) $(1)/etc/crontabs/run.5
 	$(INSTALL_BIN) ./files/check_wifi_channel $(1)/etc/crontabs/run.5
+	$(INSTALL_BIN) ./files/check_sanity $(1)/etc/crontabs/run.5
 endef
 
 $(eval $(call BuildPackage,nodewatcher))
