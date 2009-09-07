@@ -34,11 +34,13 @@ general_stats()
   show_entry "general.cached" "`cat /proc/meminfo | awk '/^Cached/ { print $2 }'`"
   
   # Wireless parameters
+  WIFI_IFACE="`iwconfig 2>/dev/null | grep ESSID | awk '{ print $1 }' | head -n 1`"
   show_entry "wifi.bssid" "`iwconfig 2>/dev/null | grep Cell | awk '{ print $5 }'`"
   show_entry "wifi.essid" "`iwconfig 2>/dev/null | grep ESSID | awk '{ split($4, a, \"\\"\"); printf(\"%s\", a[2]); }'`"
   show_entry "wifi.frequency" "`iwconfig 2>/dev/null | grep Frequency | awk '{ print $2 }' | cut -d ':' -f 2 | head -n 1`"
   # Commented out because of the iwlist (madwifi) memory leak, #209
   #show_entry "wifi.cells" "`iwlist scan 2>/dev/null | grep 'Cell.*Address' | wc -l`"
+  show_entry "wifi.mac" "`ifconfig $WIFI_IFACE | grep HWaddr | awk '{ print $5 }' | head -n 1`"
 }
 
 #
