@@ -7,4 +7,4 @@ if [ -z "$1" -o -z "$2" ]; then
 	exit 1
 fi
 
-(echo -e "POST $2 HTTP/1.0\nContent-Type: application/octet-stream\nContent-Length: 1073741824\n"; cat) | nc "$1" 80
+(echo -n -e "POST $2 HTTP/1.0\r\nContent-Type: application/octet-stream\r\nContent-Length: 1073741824\r\n\r\n"; cat) | nc "$1" 80
