@@ -1,0 +1,11 @@
+--- a/src/link_set.c  2009-09-05 13:42:24.000000000 +0200
++++ b/src/link_set.c  2009-09-05 13:42:40.000000000 +0200
+@@ -288,7 +288,7 @@
+   union olsr_ip_addr null_addr;
+
+   /* find the interface for the link */
+-  inter = if_ifwithaddr(&entry->local_iface_addr);
++  inter = entry->if_name ? if_ifwithname(entry->if_name) : if_ifwithaddr(&entry->local_iface_addr);
+
+   /* find the interface configuration for the interface */
+   for (cfg_inter = olsr_cnf->interfaces; cfg_inter; cfg_inter = cfg_inter->next) {
