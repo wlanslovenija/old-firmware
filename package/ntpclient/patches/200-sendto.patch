@@ -14,7 +14,7 @@
  	data[10] = htonl(time_sent[0]); /* Transmit Timestamp coarse */
  	data[11] = htonl(time_sent[1]); /* Transmit Timestamp fine   */
 -	send(usd,data,48,0);
-+	sendto(usd,data,48,0,(struct sockaddr *)&sa_dest,sizeof sa_des);
++	sendto(usd,data,48,0,(struct sockaddr *)&sa_dest,sizeof sa_dest);
  }
  
  static void get_packet_timestamp(int usd, struct ntptime *udp_arrival_ntp)
