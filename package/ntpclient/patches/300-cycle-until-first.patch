@@ -1,5 +1,5 @@
---- ntpclient-2007.orig/ntpclient.c	2009-09-20 12:08:47.000000000 +0200
-+++ ntpclient-2007/ntpclient.c	2009-09-20 12:20:03.000000000 +0200
+--- ntpclient-2007.orig/ntpclient.c	2009-09-20 15:09:04.000000000 +0200
++++ ntpclient-2007/ntpclient.c	2009-09-20 15:08:49.000000000 +0200
 @@ -129,6 +129,7 @@
  	int set_clock;   /* non-zero presumably needs root privs */
  	int probe_count;
@@ -38,6 +38,15 @@
  			if (rfc1305print(incoming_word, &udp_arrival_ntp, ntpc, &error)!=0) continue;
  			/* udp_handle(usd,incoming,pack_len,&sa_xmit,sa_xmit_len); */
  		} else {
+@@ -591,7 +599,7 @@
+ 	" [-d]"
+ #endif
+ 	" [-D] [-f frequency] [-g goodness] -h hostname\n"
+-	"\t[-i interval] [-l] [-p port] [-q min_delay]"
++	"\t[-i interval] [-j interval] [-l] [-p port] [-q min_delay]"
+ #ifdef ENABLE_REPLAY
+ 	" [-r]"
+ #endif
 @@ -611,12 +619,13 @@
  	ntpc.live=0;
  	ntpc.set_clock=0;
