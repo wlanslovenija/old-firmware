@@ -4,6 +4,17 @@ START=50
 
 start() {
         nodogsplash -c /etc/nodogsplash/nodogsplash.conf -w /var/run/nodogsplash.sock
+
+	# Reload MAC whitelist from local filesystem if one exists
+	{
+		while ((true)); do
+			sleep 5
+			if [ -S /var/run/nodogsplash.sock ]; then
+				/etc/crontabs/run.daily/whitelist-pull.sh init
+				break
+			fi
+		done
+	} &
 }
 
 stop() {
