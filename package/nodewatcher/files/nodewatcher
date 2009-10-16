@@ -19,6 +19,24 @@ show_entry()
 }
 
 #
+# A helper function for outputting key-value pairs where
+# value is read from a file if one exists, otherwise the
+# default value is used.
+#
+show_entry_from_file()
+{
+  KEY="$1"
+  FNAME="$2"
+  DEF="$3"
+
+  if [ -f "${FNAME}" ]; then
+    show_entry "${KEY}" "`cat ${FNAME}`"
+  else
+    show_entry "${KEY}" "${DEF}"
+  fi
+}
+
+#
 # Displays general statistics about a node such as firmware version,
 # local time, uptime, bssid, essid, channel.
 #
@@ -41,6 +59,10 @@ general_stats()
   # Commented out because of the iwlist (madwifi) memory leak, #209
   #show_entry "wifi.cells" "`iwlist scan 2>/dev/null | grep 'Cell.*Address' | wc -l`"
   show_entry "wifi.mac" "`ifconfig $WIFI_IFACE | grep HWaddr | awk '{ print $5 }' | head -n 1`"
+
+  # DNS metrics
+  show_entry_from_file "dns.local" /var/dns_test_local "0"
+  show_entry_from_file "dns.remote" /var/dns_test_remote "0"
 }
 
 #
@@ -72,6 +94,7 @@ nds_stats()
 
   if [ "$?" == "0" ]; then
     /usr/bin/ndsctl -s /var/run/nodogsplash.sock clients | awk -f /etc/nodewatcher/parse_nds.awk
+    show_entry_from_file "nds.down" /var/nds_status "0"
   else
     show_entry "nds.down" 1
   fi

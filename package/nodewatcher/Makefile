@@ -10,7 +10,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodewatcher
 PKG_VERSION:=0.1
-PKG_RELEASE:=13
+PKG_RELEASE:=14
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -41,6 +41,7 @@ define Package/nodewatcher/install
 	$(INSTALL_DIR) $(1)/etc/crontabs/run.5
 	$(INSTALL_BIN) ./files/check_wifi_channel $(1)/etc/crontabs/run.5
 	$(INSTALL_BIN) ./files/check_sanity $(1)/etc/crontabs/run.5
+	$(INSTALL_BIN) ./files/check_dns $(1)/etc/crontabs/run.5
 endef
 
 $(eval $(call BuildPackage,nodewatcher))

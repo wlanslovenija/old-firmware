@@ -1,0 +1,30 @@
+#!/bin/sh
+
+LOOKUP_LOCAL="localhost"
+LOOKUP_REMOTE="dns-test.wlan"
+REMOTE_RESPONSE="127.0.0.1"
+
+# Local checks (is dnsmasq functioning properly?)
+nslookup ${LOOKUP_LOCAL} > /dev/null
+if [ "$?" == "0" ]; then
+  echo -n "0" > /var/dns_test_local
+else
+  echo -n "1" > /var/dns_test_local
+  /etc/init.d/dnsmasq stop
+  /etc/init.d/dnsmasq start
+fi
+
+# Remote checks (are DNS resolutions actually working?)
+DNS_RESPONSE="`nslookup ${LOOKUP_REMOTE}`"
+if [ "$?" == "0" ]; then
+  # Verify if record matches
+  if [ "`echo ${DNS_RESPONSE} | awk '{ print $11 }'`" != "${REMOTE_RESPONSE}" ]; then
+    echo -n "2" > /var/dns_test_remote
+  else
+    echo -n "0" > /var/dns_test_remote
+  fi
+else
+  # Failed to resolve remote record
+  echo -n "1" > /var/dns_test_remote
+fi
+
