@@ -79,8 +79,10 @@ traffic_stats()
     xmt=`echo $entry | cut -d '=' -f 3`
     
     if [[ "$iface" != "lo" && "$iface" != "wmaster0" ]]; then
-      show_entry "iface.${iface}.down" $rcv
-      show_entry "iface.${iface}.up" $xmt
+      if [[ "`ip link show ${iface} | head -n 1 | grep UP`" != "" ]]; then
+        show_entry "iface.${iface}.down" $rcv
+        show_entry "iface.${iface}.up" $xmt
+      fi
     fi
   done
 }
