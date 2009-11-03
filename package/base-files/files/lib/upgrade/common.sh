@@ -45,7 +45,7 @@ pivot() { # <new_root> <old_root>
 }
 
 run_ramfs() { # <command> [...]
-	install_bin /bin/busybox /bin/ash /bin/sh /bin/mount /bin/umount /sbin/pivot_root /usr/bin/wget /sbin/reboot /bin/sync /bin/dd /bin/grep /bin/cp /bin/mv /bin/tar /usr/bin/md5sum "/usr/bin/[" /bin/vi /bin/ls /bin/cat /usr/bin/awk /usr/bin/hexdump
+	install_bin /bin/busybox /bin/ash /bin/sh /bin/mount /bin/umount /sbin/pivot_root /usr/bin/wget /sbin/reboot /bin/sync /bin/dd /bin/grep /bin/cp /bin/mv /bin/tar /usr/bin/md5sum "/usr/bin/[" /bin/vi /bin/ls /bin/cat /usr/bin/awk /usr/bin/hexdump /bin/sleep /bin/zcat /usr/bin/bzcat
 	install_bin /sbin/mtd
 	for file in $RAMFS_COPY_BIN; do
 		install_bin $file
@@ -103,17 +103,28 @@ rootfs_type() {
 	mount | awk '($3 ~ /^\/$/) && ($5 !~ /rootfs/) { print $5 }'
 }
 
-get_image() {
+get_image() { # <source> [ <command> ]
 	local from="$1"
+	local conc="$2"
+	local cmd
 
 	case "$from" in
-		http://*|ftp://*) wget -O- -q "$from";;
-		*) cat "$from"
+		http://*|ftp://*) cmd="wget -O- -q";;
+		*) cmd="cat";;
 	esac
+	if [ -z "$conc" ]; then
+		local magic="$(eval $cmd $from | dd bs=2 count=1 2>/dev/null | hexdump -n 2 -e '1/1 "%02x"')"
+		case "$magic" in
+			1f8b) conc="zcat";;
+			425a) conc="bzcat";;
+		esac
+	fi
+
+	eval "$cmd $from ${conc:+| $conc}"
 }
 
 get_magic_word() {
-	get_image "$1" | dd bs=2 count=1 2>/dev/null | hexdump -C | awk '$2 { print $2 $3 }'
+	get_image "$@" | dd bs=2 count=1 2>/dev/null | hexdump -v -n 2 -e '1/1 "%02x"'
 }
 
 refresh_mtd_partitions() {
@@ -131,12 +142,12 @@ jffs2_copy_config() {
 }
 
 default_do_upgrade() {
+	sync
 	if [ "$SAVE_CONFIG" -eq 1 -a -z "$USE_REFRESH" ]; then
 		get_image "$1" | mtd -j "$CONF_TAR" write - "${PART_NAME:-image}"
 	else
 		get_image "$1" | mtd write - "${PART_NAME:-image}"
 	fi
-	sync
 }
 
 do_upgrade() {
@@ -146,7 +157,7 @@ do_upgrade() {
 	else
 		default_do_upgrade "$ARGV"
 	fi
-	
+
 	[ "$SAVE_CONFIG" -eq 1 -a -n "$USE_REFRESH" ] && {
 		v "Refreshing partitions"
 		if type 'platform_refresh_partitions' >/dev/null 2>/dev/null; then
@@ -160,6 +171,12 @@ do_upgrade() {
 			jffs2_copy_config
 		fi
 	}
+	v "Upgrade completed"
 	[ -n "$DELAY" ] && sleep "$DELAY"
-	ask_bool 1 "Reboot" && reboot
+	ask_bool 1 "Reboot" && {
+		v "Rebooting system..."
+		reboot
+		sleep 5
+		echo b 2>/dev/null >/proc/sysrq-trigger
+	}
 }
