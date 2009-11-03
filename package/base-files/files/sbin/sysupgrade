@@ -9,7 +9,6 @@ export VERBOSE=1
 export SAVE_CONFIG=1
 export DELAY=
 export CONF_IMAGE=
-
 # parse options
 while [ -n "$1" ]; do 
 	case "$1" in
@@ -52,7 +51,7 @@ EOF
 
 add_uci_conffiles() {
 	local file="$1"
-	find /etc/config /etc/passwd /etc/group /etc/dropbear /etc/firewall.user > "$file"
+	find /etc/config /etc/passwd /etc/group /etc/dropbear /etc/firewall.user /etc/rc.local > "$file"
 	return 0
 }
 
@@ -89,7 +88,7 @@ for check in $sysupgrade_image_check; do
 done
 
 if [ -n "$CONF_IMAGE" ]; then
-	case "$(get_magic_word "$CONF_IMAGE")" in
+	case "$(get_magic_word $CONF_IMAGE cat)" in
 		# .gz files
 		1f8b) ;;
 		*)
@@ -97,7 +96,7 @@ if [ -n "$CONF_IMAGE" ]; then
 			exit 1
 		;;
 	esac
-	get_image "$CONF_IMAGE" > "$CONF_TAR"
+	get_image "$CONF_IMAGE" "cat" > "$CONF_TAR"
 	export SAVE_CONFIG=1
 elif ask_bool $SAVE_CONFIG "Keep config files over reflash"; then
 	do_save_conffiles
@@ -107,5 +106,9 @@ else
 fi
 run_hooks "" $sysupgrade_pre_upgrade
 
-v "Switching to ramdisk..."
-run_ramfs '. /etc/functions.sh; include /lib/upgrade; do_upgrade'
+if [ -n "$(rootfs_type)" ]; then
+	v "Switching to ramdisk..."
+	run_ramfs '. /etc/functions.sh; include /lib/upgrade; do_upgrade'
+else
+	do_upgrade
+fi
