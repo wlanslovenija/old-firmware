@@ -29,6 +29,7 @@ $0 [-n] [-p] <image filename ...>
   -n  do not keep current configuration files after upgrade
   -p  keep current password files after upgrade
   -d  only free memory and download files (if necessary)
+      (be careful, it will sever VPN connection and will not reboot)
   
   <image filename>    image filename (or HTTP/FTP URL) with embedded checksum and type
 EOF
