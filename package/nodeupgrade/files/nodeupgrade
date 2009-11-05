@@ -272,6 +272,7 @@ elif [[ "$IMAGES_COUNT" -gt 2 ]]; then
 fi
 
 HOSTS=""
+FLASH_IMAGE=""
 ROOT_IMAGE=""
 KERNEL_IMAGE=""
 for image in $IMAGES; do
@@ -283,8 +284,7 @@ for image in $IMAGES; do
 			exit 1
 		fi
 
-		# We don't want extra spaces in IMAGES when there is only one
-		IMAGES="$image"
+		FLASH_IMAGE="$image"
 	elif [[ -n "$ROOT_IMAGE" ]]; then
 		case "$type" in
 			root)
@@ -393,10 +393,6 @@ stop_services
 iptables -I INPUT -p udp --dport 67:68 -j DROP
 sysctl -e -w net.ipv4.ip_forward=0 >/dev/null
 
-if [[ "$IMAGES_COUNT" -eq 2 ]]; then
-	IMAGES=""
-fi
-
 if [[ -n "$ROOT_IMAGE" && ! -e "$ROOT_IMAGE" ]]; then
 	download_image "$ROOT_IMAGE" || flashing_failed
 	ROOT_IMAGE="$output_image"
@@ -409,8 +405,8 @@ if [[ -n "$KERNEL_IMAGE" && ! -e "$KERNEL_IMAGE" ]]; then
 fi
 export KERNEL_IMAGE
 
-if [[ -n "$IMAGES" && ! -e "$IMAGES" ]]; then
-	download_image "$IMAGES" || flashing_failed
+if [[ -n "$FLASH_IMAGE" && ! -e "$FLASH_IMAGE" ]]; then
+	download_image "$FLASH_IMAGE" || flashing_failed
 	FLASH_IMAGE="$output_image"
 fi
 export FLASH_IMAGE
