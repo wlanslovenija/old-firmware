@@ -1298,6 +1298,7 @@ CONFIG_KEXEC_TOOLS_TARGET_NAME="mips"
 # CONFIG_PACKAGE_losetup is not set
 # CONFIG_PACKAGE_mount-utils is not set
 CONFIG_PACKAGE_nodewatcher=y
+CONFIG_PACKAGE_nodeupgrade=y
 CONFIG_PACKAGE_nullhttpd=y
 # CONFIG_PACKAGE_ocf-crypto-headers is not set
 # CONFIG_PACKAGE_openssl-util is not set
