@@ -1,11 +1,3 @@
-# 
-# Copyright (C) 2006 OpenWrt.org
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
-# $Id: Makefile 7742 2007-06-27 05:26:20Z nbd $
-
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nullhttpd

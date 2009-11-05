@@ -1,11 +1,3 @@
-#
-# Copyright (C) 2007 OpenWrt.org
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
-# $Id: Makefile 9695 2007-12-09 18:59:01Z nbd $
-
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=cronscripts
