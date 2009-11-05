@@ -282,6 +282,9 @@ for image in $IMAGES; do
 			echo "Invalid image type or missing image filename argument."
 			exit 1
 		fi
+
+		# We don't want extra spaces in IMAGES when there is only one
+		IMAGES="$image"
 	elif [[ -n "$ROOT_IMAGE" ]]; then
 		case "$type" in
 			root)
