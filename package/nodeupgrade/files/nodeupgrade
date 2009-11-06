@@ -43,6 +43,8 @@ $0 [-n] [-p] <image filename ...>
       (be careful, it will sever VPN connection and will not reboot)
   
   <image filename>    image filename (or HTTP/FTP URL) with embedded checksum and type
+
+WARNING: It is expected that watchdog can be disabled by TERM signal. If this is not so disable watchdog manually before running this script. Otherwise watchdog could reboot the node in the middle of flashing what is NOT fun.
 EOF
 }
 
@@ -204,7 +206,7 @@ check_file_partition() {
 }
 
 stop_services() {
-	echo "Stopping services (if is normal for connection to go down now if node is connected only by VPN to the network, but flashing will continue)."
+	echo "Stopping services (if is normal for connection to go down now if the node is connected only by VPN to the network, but flashing will continue)."
 
 	for service in $SERVICES_STOP; do
 		"/etc/init.d/$service" stop 2>/dev/null &
