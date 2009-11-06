@@ -17,10 +17,21 @@ SERVICES_STOP_WAIT=5 # seconds
 SERVICES_KILL="$SERVICES_STOP crond ntpclient"
 SERVICES_TERM_WAIT=5 # seconds
 
+DOWNLOAD_TIMEOUT=420 # seconds
+DOWNLOAD_RETRY_WAIT_TIME=60 # seconds
+DOWNLOAD_RETRY_NUMBER=3 # number of retries
+
 DOWNLOAD_ONLY=0
 
 BASE64AWK=/usr/lib/base64.awk
 HOSTSAWK=/usr/lib/hosts.awk
+
+script_interrupted() {
+	echo "Interrupted."
+	exit 2
+}
+
+trap "script_interrupted" INT
 
 usage() {
 cat <<EOF
@@ -214,19 +225,34 @@ stop_services() {
 
 download_image() {
 	local image="$1"
+	local try=0
+	local result
 
 	output_image="$(basename "$image")"
 	output_image="$TMP_PARTITION/$output_image"
-	
-	if [[ ! -e "$output_image" ]]; then
-		echo "Downloading '$image'."
-		wget -q -O "$output_image" "$image" 2>/dev/null || {
+
+	echo "Downloading '$image'."
+	while true; do
+		result=$(timeout -t "$DOWNLOAD_TIMEOUT" wget -c -q -O "$output_image" "$image" 2>&1 >/dev/null)
+		if [[ "$?" -eq 0 ]]; then
+			# Download successful
+			break
+		# TODO: What happens when FTP downloading already fully downloaded image?
+		elif echo "$result" | grep -q -E "server returned error.+\<416\>" 2>/dev/null; then
+			# Image has already been downloaded fully (we check checksum anyway)
+			break
+		elif [[ "$try" -lt "$DOWNLOAD_RETRY_NUMBER" ]]; then
+			echo "Failed. Waiting for retry $DOWNLOAD_RETRY_WAIT_TIME seconds."
+			sleep "$DOWNLOAD_RETRY_WAIT_TIME"
+			echo "Retrying."
+			try=$((try + 1))
+		else
 			echo "Image '$image' download to '$output_image' failed."
 			return 1
-		}
-		echo "Done."
-	fi
-	
+		fi
+	done
+	echo "Done."
+
 	image_type "$output_image"
 	image_checksum "$image"
 	check_image "$output_image" "$type" "$checksum" || return 1
@@ -243,11 +269,14 @@ IMAGES=""
 IMAGES_COUNT=0
 while [ -n "$1" ]; do
 	case "$1" in
-		-n) CONF_KEEP=0
+		-n)
+			CONF_KEEP=0
 			;;
-		-p) PASSWORD_KEEP=1
+		-p)
+			PASSWORD_KEEP=1
 			;;
-		-d) DOWNLOAD_ONLY=1
+		-d)
+			DOWNLOAD_ONLY=1
 			;;
 		-*)
 			echo "Invalid argument '$1'."
@@ -380,7 +409,7 @@ if [[ -n "$CONF_FILES" ]]; then
 	tar czf "$CONF_TGZ" $CONF_FILES 2>/dev/null
 fi
 
-# We add resolved hostnames so we can resolve them later in every case
+# We add resolved hostnames so we can resolve them later in any case
 # (we do not clean them in the case of failed flash, though)
 echo "$HOSTS" >>/etc/hosts
 
