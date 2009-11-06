@@ -22,7 +22,7 @@ flashing_failed() {
 	if [[ "$DOWNLOAD_ONLY" -ne 0 ]]; then
 		echo "In download only mode. Not rebooting."
 		exit 1
-	if
+	fi
 	
 	node_reboot
 }
