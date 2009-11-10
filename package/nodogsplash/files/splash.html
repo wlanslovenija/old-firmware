@@ -35,31 +35,26 @@
 </td>
 </tr>
 <tr>
-<td class="buttons">
+<td colspan="2" class="buttons">
 <form method="get" action="$authaction" class="auth">
-<div>
-<input type="hidden" name="tok" value="$tok" />
-<input type="hidden" name="redir" value="$redir" />
-<input type="submit" value="Vstopi in se pridruži omrežju" />
-</div>
-</form>
-</td>
-<td class="buttons">
-<form method="get" action="$authaction" class="auth">
-<div>
-<input type="hidden" name="tok" value="$tok" />
-<input type="hidden" name="redir" value="$redir" />
-<input type="submit" value="Enter and join the network" />
-</div>
+<input type="hidden" name="tok" value="$tok">
+<input type="hidden" name="redir" value="$redir">
+<input type="submit" value="Vstopi in se pridruži omrežju / Enter and join the network">
 </form>
 </td>
 </tr>
 <tr>
+<td colspan="2">
+<table class="warning">
+<tr>
 <td>
-<p class="warning"><strong>Pozor:</strong> Zaradi odprte brezžične narave omrežja podatki, ki se po njem pretakajo, niso zaščiteni. Zato priporočamo uporabo varnih SSL/TLS povezav do spletnih strani (ki se jih prepozna po <tt>HTTP<strong>S</strong></tt> predponi naslova) in drugih storitev. Prav tako priporočamo vklop požarnega zidu na računalniku v <i>airport</i> (ali podobnem) načinu, ki ne dovoljuje izjem. Več o varni uporabi omrežja se najde <a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net%2Fwiki%2FNavodila%2FVarnost">na naši spletni strani</a>.</p>
+<p><strong>Pozor:</strong> Zaradi odprte brezžične narave omrežja podatki, ki se po njem pretakajo, niso zaščiteni. Zato priporočamo uporabo varnih SSL/TLS povezav do spletnih strani (ki se jih prepozna po <tt>HTTP<strong>S</strong></tt> predponi naslova) in drugih storitev. Prav tako priporočamo vklop požarnega zidu na računalniku v <i>airport</i> (ali podobnem) načinu, ki ne dovoljuje izjem. Več o varni uporabi omrežja se najde <a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net%2Fwiki%2FNavodila%2FVarnost">na naši spletni strani</a>.</p>
+</td><td>
+<p>
+<strong>Warning:</strong> Because of the network's open wireless nature data transmitted over it is not protected. We recommend usage of secure SSL/TLS connections to web pages (which are recognizable by <tt>HTTP<strong>S</strong></tt> address prefix) and other services. Furthermore, we recommend to activate firewall on the computer in <i>airport</i> (or similar) mode, which does not allow exceptions. More about safe use of the network can be found <a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net%2Fwiki%2FNavodila%2FVarnost">on our home page</a>.</p>
 </td>
-<td>
-<p class="warning"><strong>Warning:</strong> Because of network's open wireless nature data transmitted over it is not protected. We recommend usage of secure SSL/TLS connections to web pages (which are recognizable by <tt>HTTP<strong>S</strong></tt> address prefix) and other services. Furthermore, we recommend to activate firewall on the computer in <i>airport</i> (or similar) mode, which does not allow exceptions. More about safe use of the network can be found <a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net%2Fwiki%2FNavodila%2FVarnost">on our home page</a>.</p>
+</tr>
+</table>
 </td>
 </tr>
 </table>

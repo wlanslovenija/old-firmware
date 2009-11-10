@@ -1,5 +1,5 @@
 #nodogsplash table {
-    font-size: 85%;
+    font-size: 11px;
 }
 
 #nodogsplash td {
@@ -83,6 +83,9 @@
   border: 1px solid #CD2D1D;
   background-color: #FFEBE9;
   color: #930E00;
-  text-align: center;
   clear: both;
+}
+
+#nodogsplash .warning a {
+  color: #930E00;
 }
