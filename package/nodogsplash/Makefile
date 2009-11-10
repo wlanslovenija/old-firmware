@@ -10,7 +10,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodogsplash
 PKG_VERSION:=0.9_beta9.9.5
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://kokoro.ucsd.edu/nodogsplash/ \
@@ -68,8 +68,8 @@ define Package/nodogsplash/install
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/pages
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
 	$(CP) ./files/*.html $(1)/etc/nodogsplash/htdocs/
-	$(CP) ./files/*.css $(1)/etc/nodogsplash/htdocs/pages
-	$(CP) ./files/*.png $(1)/etc/nodogsplash/htdocs/images
+	$(CP) ./files/$$pagesdir/*.css $(1)/etc/nodogsplash/htdocs/pages
+	$(CP) ./files/images/*.png $(1)/etc/nodogsplash/htdocs/images
 	$(INSTALL_DIR) $(1)/etc/crontabs/run.daily
 	$(INSTALL_BIN) ./files/whitelist-pull.sh $(1)/etc/crontabs/run.daily
 endef
