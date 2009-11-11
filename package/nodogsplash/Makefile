@@ -68,7 +68,7 @@ define Package/nodogsplash/install
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/pages
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
 	$(CP) ./files/*.html $(1)/etc/nodogsplash/htdocs/
-	$(CP) ./files/$$pagesdir/*.css $(1)/etc/nodogsplash/htdocs/pages
+	$(CP) ./files/\$$$$pagesdir/*.css $(1)/etc/nodogsplash/htdocs/pages
 	$(CP) ./files/images/*.png $(1)/etc/nodogsplash/htdocs/images
 	$(INSTALL_DIR) $(1)/etc/crontabs/run.daily
 	$(INSTALL_BIN) ./files/whitelist-pull.sh $(1)/etc/crontabs/run.daily
