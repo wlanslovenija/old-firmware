@@ -73,6 +73,7 @@ struct trigger_list {
 static struct {
   struct trigger_list *triggers;
   struct action_queue *aq;
+  struct timer_entry *timer;
 } actions_conf;
 
 /* Forward declarations */
@@ -248,7 +249,7 @@ int olsrd_plugin_init(void)
   olsr_delroute_function = actions_del_olsr_v4_route;
 
   /* Register script executor */
-  olsr_register_scheduler_event(&actions_execute_queued, NULL, 10, 0, NULL);
+  olsr_set_timer(&actions_conf.timer, 10 * MSEC_PER_SEC, 5, OLSR_TIMER_PERIODIC, &actions_execute_queued, NULL, 0);
   
   return 1;
 }
@@ -263,6 +264,7 @@ static void my_init(void)
 {
   actions_conf.aq = 0;
   actions_conf.triggers = 0;
+  actions_conf.timer = 0;
 }
 
 /**
