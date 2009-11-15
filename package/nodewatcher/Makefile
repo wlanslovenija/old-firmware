@@ -2,14 +2,14 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodewatcher
 PKG_VERSION:=0.1
-PKG_RELEASE:=16
+PKG_RELEASE:=17
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/nodewatcher
   SECTION:=utils
   CATEGORY:=Utilities
-  DEPENDS:=+busybox +cronscripts
+  DEPENDS:=+busybox +cronscripts +nullhttpd +olsrd-mod-actions
   TITLE:=NodeWatcher
 endef
 
@@ -34,6 +34,10 @@ define Package/nodewatcher/install
 	$(INSTALL_BIN) ./files/check_wifi_channel $(1)/etc/crontabs/run.5
 	$(INSTALL_BIN) ./files/check_sanity $(1)/etc/crontabs/run.5
 	$(INSTALL_BIN) ./files/check_dns $(1)/etc/crontabs/run.5
+	$(INSTALL_DIR) $(1)/www/nullhttpd
+	$(CP) -r ./files/htdocs/* $(1)/www/nullhttpd
+	$(INSTALL_DIR) $(1)/etc/actions.d
+	$(INSTALL_BIN) ./files/olsr_gateway_action $(1)/etc/actions.d/olsr_gateway_action
 endef
 
 $(eval $(call BuildPackage,nodewatcher))
