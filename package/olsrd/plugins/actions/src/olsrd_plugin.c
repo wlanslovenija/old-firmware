@@ -31,6 +31,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
@@ -150,7 +152,7 @@ void execute_script(const struct trigger_list *trigger, const int type)
  * @param trigger Trigger data struct
  * @param type Action type
  */
-void queue_execute_script(const struct trigger_list *trigger, const int type)
+void queue_execute_script(struct trigger_list *trigger, const int type)
 {
   /* See if this script has already been scheduled for execution */
   struct action_queue *entry = actions_conf.aq;
@@ -240,8 +242,25 @@ int actions_del_olsr_v4_route(const struct rt_entry *r)
   return orig_delroute_function(r);
 }
 
+/**
+ * Just executes waitpid on the child process so it doesn't stay a
+ * zombie.
+ */
+void actions_reap_zombies(int signal)
+{
+  int status;
+  waitpid(-1, &status, WNOHANG);
+}
+
 int olsrd_plugin_init(void)
 {
+  /* Ensure that no zombies will be created by our forks */
+  struct sigaction sa;
+  sa.sa_handler = &actions_reap_zombies;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_NOCLDWAIT;
+  sigaction(SIGCHLD, &sa, NULL);
+
   /* Register routing hooks */
   orig_addroute_function = olsr_addroute_function;
   orig_delroute_function = olsr_delroute_function;
