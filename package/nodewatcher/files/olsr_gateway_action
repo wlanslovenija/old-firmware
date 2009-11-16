@@ -28,10 +28,20 @@ iptables_retry()
   fi
 }
 
+generate_rules()
+{
+  NF_ACTION="$1"
+  
+  iptables_retry -t nat -${NF_ACTION} PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} -d ${LOCAL_IP} -j CLIENT_REDIRECT
+  iptables_retry -t nat -${NF_ACTION} PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} ! -d 10.14.0.0/16 -j CLIENT_REDIRECT
+}
+
 start_traffic_redirection()
 {
   # Insert iptables rule to forward incoming HTTP traffic (only from client subnet)
-  iptables_retry -t nat -I PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} ! -d 10.14.0.0/16 -j DNAT --to-destination ${LOCAL_IP}:2051
+  iptables_retry -t nat -N CLIENT_REDIRECT
+  generate_rules "I"
+  iptables_retry -t nat -A CLIENT_REDIRECT -p tcp --dport 80 -j DNAT --to-destination ${LOCAL_IP}:2051
   iptables_retry -I INPUT -p tcp --dport 2051 -j ACCEPT
   
   # Setup redirection enabled mark
@@ -41,7 +51,9 @@ start_traffic_redirection()
 stop_traffic_redirection()
 {
   # Remove iptables redirection rule
-  iptables_retry -t nat -D PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} ! -d 10.14.0.0/16 -j DNAT --to-destination ${LOCAL_IP}:2051
+  generate_rules "D"
+  iptables_retry -t nat -F CLIENT_REDIRECT
+  iptables_retry -t nat -X CLIENT_REDIRECT
   iptables_retry -D INPUT -p tcp --dport 2051 -j ACCEPT
   
   # Remove redirection enabled mark
