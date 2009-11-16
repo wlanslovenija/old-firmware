@@ -1,0 +1,14 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2007 OpenWrt.org
+
+START=60
+
+start() {
+  /usr/bin/nullhttpd -p 2051 -b /www/nullhttpd -d /var/run/nullhttpd.pid
+}
+
+stop() {
+	killall nullhttpd
+	return 0
+}
+
