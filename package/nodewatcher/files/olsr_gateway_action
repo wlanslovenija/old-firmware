@@ -2,52 +2,73 @@
 ACTION="$1"
 ROUTE="$2"
 LOCK="/var/lock/traffic_redirection"
+MARK="/tmp/traffic_redirection_enabled"
+
+iptables_retry()
+{
+  RESULT=0
+  for _ in $(seq 1 5); do
+    iptables $@ 2> /tmp/iptables_errors.log 2>&1
+    RESULT=$?
+    
+    if [[ "${RESULT}" == "4" ]]; then
+      # Error code 4 indicates a temporary resource problem, retry
+      sleep 1
+    else
+      break
+    fi
+  done
+  
+  if [[ "${RESULT}" == "4" ]]; then
+    # Unable to modify netfilter rules, state is undefined and we must reboot
+    reboot
+  elif [[ "${RESULT}" != "0" ]]; then
+    # Some other error has ocurred, report it so nodewatcher will notice it
+    echo "${RESULT}" > /tmp/iptables_redirection_problem
+  fi
+}
+
+start_traffic_redirection()
+{
+  # Insert iptables rule to forward incoming HTTP traffic (only from client subnet)
+  iptables_retry -t nat -I PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} ! -d 10.14.0.0/16 -j DNAT --to-destination ${LOCAL_IP}:2051
+  iptables_retry -I INPUT -p tcp --dport 2051 -j ACCEPT
+  
+  # Setup redirection enabled mark
+  touch ${MARK}
+}
+
+stop_traffic_redirection()
+{
+  # Remove iptables redirection rule
+  iptables_retry -t nat -D PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} ! -d 10.14.0.0/16 -j DNAT --to-destination ${LOCAL_IP}:2051
+  iptables_retry -D INPUT -p tcp --dport 2051 -j ACCEPT
+  
+  # Remove redirection enabled mark
+  rm ${MARK}
+}
 
 # Acquire lock
 lock ${LOCK}
 trap "lock -u ${LOCK}" INT TERM EXIT
 
-if [[ "${ROUTE}" == "0.0.0.0" ]]; then
-  # Get some variables
-  LOCAL_IP="`uci get network.subnet0.ipaddr`"
-  CLIENT_SUBNET="${LOCAL_IP}/`uci get network.subnet0.netmask`"
-  
-  # Check what action to take
-  if [[ "${ACTION}" == "del" ]]; then
-    # Internet gateway has just gone down, setup request redirection
-    if [[ ! -f /tmp/traffic_redirection_enabled ]]; then
-      # Reconfigure dnsmasq
-      killall dnsmasq
-      /usr/sbin/dnsmasq --address=/#/${LOCAL_IP}
-      
-      # Setup nullhttpd
-      /usr/bin/nullhttpd -p 2051 -b /www/nullhttpd -d /var/run/nullhttpd.pid
-      
-      # Insert iptables rule to forward incoming HTTP traffic (only from client subnet)
-      iptables -t nat -I PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} -j DNAT --to-destination ${LOCAL_IP}:2051
-      iptables -I INPUT -p tcp --dport 2051 -j ACCEPT
-      
-      # Setup rediraction enabled mark
-      touch /tmp/traffic_redirection_enabled
-    fi
-  else
-    # Internet gateway has come back up, reconfigure redirection when needed
-    if [[ -f /tmp/traffic_redirection_enabled ]]; then
-      # Reconfigure dnsmasq
-      killall dnsmasq
-      /etc/init.d/dnsmasq start
-      
-      # Remove iptables redirection rule
-      iptables -t nat -D PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} -j DNAT --to-destination ${LOCAL_IP}:2051
-      iptables -D INPUT -p tcp --dport 2051 -j ACCEPT
-      
-      # Shutdown nullhttpd
-      killall nullhttpd
-      
-      # Remove redirection enabled mark
-      rm /tmp/traffic_redirection_enabled
-    fi
-  fi
+# Get some variables
+LOCAL_IP="`uci get network.subnet0.ipaddr`"
+CLIENT_SUBNET="${LOCAL_IP}/`uci get network.subnet0.netmask`"
+
+# Check what action to take
+if [[ "${ACTION}" == "init" ]]; then
+  # Initialize with traffic redirection enabled
+  start_traffic_redirection
+elif [[ "${ACTION}" == "finish" ]]; then
+  # Finish with traffic redirection disabled
+  stop_traffic_redirection
+elif [[ "${ACTION}" == "add" && -f ${MARK} ]]; then
+  # Internet gateway has come back up, reconfigure redirection when needed
+  stop_traffic_redirection
+elif [[ "${ACTION}" == "del" && ! -f ${MARK} ]]; then
+  # Internet gateway has just gone down, setup request redirection
+  start_traffic_redirection
 fi
 
 # Release lock

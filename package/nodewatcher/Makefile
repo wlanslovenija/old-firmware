@@ -38,6 +38,7 @@ define Package/nodewatcher/install
 	$(CP) -r ./files/htdocs/* $(1)/www/nullhttpd
 	$(INSTALL_DIR) $(1)/etc/actions.d
 	$(INSTALL_BIN) ./files/olsr_gateway_action $(1)/etc/actions.d/olsr_gateway_action
+	$(INSTALL_BIN) ./files/olsr_dns_action $(1)/etc/actions.d/olsr_dns_action
 endef
 
 $(eval $(call BuildPackage,nodewatcher))
