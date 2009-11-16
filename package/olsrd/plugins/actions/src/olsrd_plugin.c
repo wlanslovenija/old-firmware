@@ -42,6 +42,7 @@
 #include "scheduler.h"
 
 #define PLUGIN_INTERFACE_VERSION 5
+#define ROUTE_FLAP_TIMER_MSEC 10000
 
 /* Pointers to original OLSR functions, so our hooks can call
  * them after they are done with their thing. */
@@ -57,7 +58,10 @@ static export_route_function orig_delroute_function;
  */
 enum action_type {
   RT_ADD = 0,
-  RT_DEL
+  RT_DEL,
+
+  /* This is ok as it is only used on init */
+  RT_INIT
 };
 
 struct action_queue {
@@ -76,6 +80,7 @@ static struct {
   struct trigger_list *triggers;
   struct action_queue *aq;
   struct timer_entry *timer;
+  clock_t next_update;
 } actions_conf;
 
 /* Forward declarations */
@@ -141,9 +146,32 @@ void execute_script(const struct trigger_list *trigger, const int type)
      *  $1 - Operation ('add' or 'del') that ocurred
      *  $2 - Routing entry which has been added or deleted
      */
-    execl(trigger->script, trigger->script, type == RT_ADD ? "add" : "del", inet_ntoa(trigger->trigger_addr), (char*) NULL);
+    if (type == RT_INIT) {
+      execl(trigger->script, trigger->script, "init", (char*) NULL);
+    } else {
+      execl(trigger->script, trigger->script, type == RT_ADD ? "add" : "del", inet_ntoa(trigger->trigger_addr), (char*) NULL);
+    }
   }
 }
+
+/**
+ * Executes any pending scripts.
+ */
+void actions_execute_queued(void *foo __attribute__((unused)))
+{
+  struct action_queue *entry = actions_conf.aq;
+  struct action_queue *tmp;
+  while (entry) {
+    execute_script(entry->trigger, entry->type);
+    tmp = entry->next;
+    free(entry);
+    entry = tmp;
+  }
+
+  actions_conf.aq = 0;
+  actions_conf.next_update = GET_TIMESTAMP(ROUTE_FLAP_TIMER_MSEC);
+}
+
 
 /**
  * Queues script execution for a later interval if the same script
@@ -183,23 +211,19 @@ void queue_execute_script(struct trigger_list *trigger, const int type)
   entry->type = type;
   entry->next = actions_conf.aq;
   actions_conf.aq = entry;
-}
 
-/**
- * Executes any pending scripts.
- */
-void actions_execute_queued(void *foo __attribute__((unused)))
-{
-  struct action_queue *entry = actions_conf.aq;
-  struct action_queue *tmp;
-  while (entry) {
-    execute_script(entry->trigger, entry->type);
-    tmp = entry->next;
-    free(entry);
-    entry = tmp;
+  /* Check if we can run queue processing */
+  if (TIMED_OUT(actions_conf.next_update)) {
+    /* Run now and set next update timestamp */
+    actions_execute_queued(NULL);
+
+    /* If a timer has been set, stop it */
+    olsr_stop_timer(actions_conf.timer);
+    actions_conf.timer = 0;
+  } else {
+    /* We can't run now, schedule run for a later time */
+    olsr_set_timer(&actions_conf.timer, TIME_DUE(actions_conf.next_update), 5, OLSR_TIMER_ONESHOT, &actions_execute_queued, NULL, 0);
   }
-
-  actions_conf.aq = 0;
 }
 
 /**
@@ -267,9 +291,14 @@ int olsrd_plugin_init(void)
   olsr_addroute_function = actions_add_olsr_v4_route;
   olsr_delroute_function = actions_del_olsr_v4_route;
 
-  /* Register script executor */
-  olsr_set_timer(&actions_conf.timer, 10 * MSEC_PER_SEC, 5, OLSR_TIMER_PERIODIC, &actions_execute_queued, NULL, 0);
-  
+  /* Trigger all registered actions with "init" parameter */
+  struct trigger_list *entry = actions_conf.triggers;
+
+  while (entry) {
+    execute_script(entry, RT_INIT);
+    entry = entry->next;
+  }
+
   return 1;
 }
 
@@ -284,6 +313,7 @@ static void my_init(void)
   actions_conf.aq = 0;
   actions_conf.triggers = 0;
   actions_conf.timer = 0;
+  actions_conf.next_update = GET_TIMESTAMP(ROUTE_FLAP_TIMER_MSEC);
 }
 
 /**
