@@ -37,12 +37,16 @@
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
 #include "olsr.h"
+#include "log.h"
 #include "process_routes.h"
 #include "kernel_routes.h"
 #include "scheduler.h"
 
 #define PLUGIN_INTERFACE_VERSION 5
 #define ROUTE_FLAP_TIMER_MSEC 10000
+
+/* !!! Redefine olsrd's macro as it is totally wrong !!! */
+#define TIME_DUE(s1) ((int)((s1 - now_times) * olsr_cnf->system_tick_divider))
 
 /* Pointers to original OLSR functions, so our hooks can call
  * them after they are done with their thing. */
@@ -60,8 +64,9 @@ enum action_type {
   RT_ADD = 0,
   RT_DEL,
 
-  /* This is ok as it is only used on init */
-  RT_INIT
+  /* This is ok as it is only used on init/finish */
+  RT_INIT,
+  RT_FINISH
 };
 
 struct action_queue {
@@ -73,14 +78,14 @@ struct action_queue {
 struct trigger_list {
   struct in_addr trigger_addr;
   char *script;
+  struct timer_entry *timer;
+  clock_t next_update;
   struct trigger_list *next;
 };
 
 static struct {
   struct trigger_list *triggers;
   struct action_queue *aq;
-  struct timer_entry *timer;
-  clock_t next_update;
 } actions_conf;
 
 /* Forward declarations */
@@ -128,6 +133,8 @@ void add_trigger(const char *addr, const char *script)
   entry = (struct trigger_list*) malloc(sizeof(struct trigger_list));
   entry->script = (char*) script;
   inet_aton(addr, &entry->trigger_addr);
+  entry->timer = 0;
+  entry->next_update = GET_TIMESTAMP(ROUTE_FLAP_TIMER_MSEC);
   entry->next = actions_conf.triggers;
   actions_conf.triggers = entry;
 }
@@ -148,6 +155,8 @@ void execute_script(const struct trigger_list *trigger, const int type)
      */
     if (type == RT_INIT) {
       execl(trigger->script, trigger->script, "init", (char*) NULL);
+    } else if (type == RT_FINISH) {
+      execl(trigger->script, trigger->script, "finish", (char*) NULL);
     } else {
       execl(trigger->script, trigger->script, type == RT_ADD ? "add" : "del", inet_ntoa(trigger->trigger_addr), (char*) NULL);
     }
@@ -155,21 +164,29 @@ void execute_script(const struct trigger_list *trigger, const int type)
 }
 
 /**
- * Executes any pending scripts.
+ * Executes any pending scripts for the given trigger.
+ *
+ * @param context The trigger to process actions for
  */
-void actions_execute_queued(void *foo __attribute__((unused)))
+void actions_execute_queued(void *context)
 {
   struct action_queue *entry = actions_conf.aq;
   struct action_queue *tmp;
+  struct trigger_list *trigger = (struct trigger_list*) context;
+
   while (entry) {
-    execute_script(entry->trigger, entry->type);
-    tmp = entry->next;
-    free(entry);
-    entry = tmp;
+    if (entry->trigger == trigger) {
+      execute_script(entry->trigger, entry->type);
+      tmp = entry->next;
+      free(entry);
+      entry = tmp;
+    } else {
+      entry = entry->next;
+    }
   }
 
   actions_conf.aq = 0;
-  actions_conf.next_update = GET_TIMESTAMP(ROUTE_FLAP_TIMER_MSEC);
+  trigger->next_update = GET_TIMESTAMP(ROUTE_FLAP_TIMER_MSEC);
 }
 
 
@@ -213,16 +230,16 @@ void queue_execute_script(struct trigger_list *trigger, const int type)
   actions_conf.aq = entry;
 
   /* Check if we can run queue processing */
-  if (TIMED_OUT(actions_conf.next_update)) {
+  if (TIMED_OUT(trigger->next_update)) {
     /* Run now and set next update timestamp */
-    actions_execute_queued(NULL);
+    actions_execute_queued((void*) trigger);
 
     /* If a timer has been set, stop it */
-    olsr_stop_timer(actions_conf.timer);
-    actions_conf.timer = 0;
+    olsr_stop_timer(trigger->timer);
+    trigger->timer = 0;
   } else {
     /* We can't run now, schedule run for a later time */
-    olsr_set_timer(&actions_conf.timer, TIME_DUE(actions_conf.next_update), 5, OLSR_TIMER_ONESHOT, &actions_execute_queued, NULL, 0);
+    olsr_set_timer(&trigger->timer, TIME_DUE(trigger->next_update), 5, OLSR_TIMER_ONESHOT, &actions_execute_queued, (void*) trigger, 0);
   }
 }
 
@@ -312,8 +329,6 @@ static void my_init(void)
 {
   actions_conf.aq = 0;
   actions_conf.triggers = 0;
-  actions_conf.timer = 0;
-  actions_conf.next_update = GET_TIMESTAMP(ROUTE_FLAP_TIMER_MSEC);
 }
 
 /**
@@ -328,6 +343,7 @@ static void my_fini(void)
 
   /* Free all triggers */
   while (t_entry) {
+    execute_script(t_entry, RT_FINISH);
     t_tmp = t_entry->next;
     free(t_entry->script);
     free(t_entry);
