@@ -1,0 +1,13 @@
+--- nds/libhttpd/protocol.c.orig	2009-11-18 17:17:39.000000000 +0100
++++ nds/libhttpd/protocol.c	2009-11-18 17:30:35.000000000 +0100
+@@ -669,6 +669,10 @@
+ {
+ 	char		path[HTTP_MAX_URL];
+ 
++	/* We do not want to serve directory entry directly */
++	if (entryName[0] == '\0') {
++		return(-1);
++	}
+ 	snprintf(path, HTTP_MAX_URL, "%s/%s", entry->path, entryName);
+ 	_httpd_sendFile(server, r, path);
+ 	return(0);

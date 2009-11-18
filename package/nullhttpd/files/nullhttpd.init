@@ -7,7 +7,7 @@ start() {
   LOCAL_IP="`uci get network.subnet0.ipaddr`"
   CLIENT_SUBNET="${LOCAL_IP}/`uci get network.subnet0.netmask`"
 
-  /usr/bin/nullhttpd -h ${LOCAL_IP} -p 2051 -b /www/nullhttpd -d /var/run/nullhttpd.pid
+  /usr/bin/nullhttpd -h ${LOCAL_IP} -p 2051 -r very_unlikely_filename_42.html -b /www/nullhttpd -d /var/run/nullhttpd.pid
   iptables -I INPUT -p tcp --dport 2051 ! -s ${CLIENT_SUBNET} -j REJECT --reject-with tcp-reset
 }
 
@@ -15,4 +15,3 @@ stop() {
 	killall nullhttpd
 	return 0
 }
-
