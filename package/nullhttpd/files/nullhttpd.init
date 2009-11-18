@@ -4,7 +4,11 @@
 START=60
 
 start() {
-  /usr/bin/nullhttpd -p 2051 -b /www/nullhttpd -d /var/run/nullhttpd.pid
+  LOCAL_IP="`uci get network.subnet0.ipaddr`"
+  CLIENT_SUBNET="${LOCAL_IP}/`uci get network.subnet0.netmask`"
+
+  /usr/bin/nullhttpd -h ${LOCAL_IP} -p 2051 -b /www/nullhttpd -d /var/run/nullhttpd.pid
+  iptables -I INPUT -p tcp --dport 2051 ! -s ${CLIENT_SUBNET} -j REJECT --reject-with tcp-reset
 }
 
 stop() {
