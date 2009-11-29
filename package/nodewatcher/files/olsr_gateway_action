@@ -33,7 +33,7 @@ generate_rules()
   NF_ACTION="$1"
   
   iptables_retry -t nat -${NF_ACTION} PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} -d ${LOCAL_IP} -j CLIENT_REDIRECT
-  iptables_retry -t nat -${NF_ACTION} PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} ! -d 10.14.0.0/16 -j CLIENT_REDIRECT
+  iptables_retry -t nat -${NF_ACTION} PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} ! -d 10.254.0.0/16 -j CLIENT_REDIRECT
 }
 
 start_traffic_redirection()

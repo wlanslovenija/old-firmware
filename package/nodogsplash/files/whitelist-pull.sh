@@ -4,7 +4,7 @@ trap 'killall ndsctl; exit' INT QUIT TERM EXIT
 
 NDSCTL="/usr/bin/ndsctl -s /var/run/nodogsplash.sock"
 WHITELIST_FILE="/etc/whitelist.mac"
-WHITELIST_URL="http://10.14.0.2/feeds/whitelist"
+WHITELIST_URL="http://10.254.0.1/feeds/whitelist"
 
 if [ "$1" == "init" ]; then
   # Initial load, just use the file if one exists
