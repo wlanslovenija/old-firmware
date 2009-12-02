@@ -43,7 +43,7 @@
 #include "scheduler.h"
 
 #define PLUGIN_INTERFACE_VERSION 5
-#define ROUTE_FLAP_TIMER_MSEC 10000
+#define ROUTE_FLAP_TIMER_MSEC 20000
 
 /* !!! Redefine olsrd's macro as it is totally wrong !!! */
 #define TIME_DUE(s1) ((int)((s1 - now_times) * olsr_cnf->system_tick_divider))
@@ -172,11 +172,19 @@ void actions_execute_queued(void *context)
 {
   struct action_queue *entry = actions_conf.aq;
   struct action_queue *tmp;
+  struct action_queue *prev = 0;
   struct trigger_list *trigger = (struct trigger_list*) context;
 
   while (entry) {
     if (entry->trigger == trigger) {
       execute_script(entry->trigger, entry->type);
+      
+      /* Update next pointer, so we can remove ourselves */
+      if (prev)
+        prev->next = entry->next;
+      else
+        actions_conf.aq = entry->next;
+      
       tmp = entry->next;
       free(entry);
       entry = tmp;
@@ -185,7 +193,6 @@ void actions_execute_queued(void *context)
     }
   }
 
-  actions_conf.aq = 0;
   trigger->next_update = GET_TIMESTAMP(ROUTE_FLAP_TIMER_MSEC);
 }
 
