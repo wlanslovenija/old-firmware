@@ -189,6 +189,7 @@ void actions_execute_queued(void *context)
       free(entry);
       entry = tmp;
     } else {
+      prev = entry;
       entry = entry->next;
     }
   }
