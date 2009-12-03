@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodewatcher
 PKG_VERSION:=0.1
-PKG_RELEASE:=19
+PKG_RELEASE:=20
 
 include $(INCLUDE_DIR)/package.mk
 

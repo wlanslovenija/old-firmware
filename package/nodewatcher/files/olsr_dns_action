@@ -4,16 +4,17 @@ ROUTE="$2"
 LOCK="/var/lock/dns_redirection"
 MARK="/tmp/dns_redirection_enabled"
 DNS_LIST="/tmp/dns_reachable_list"
+INIT_DONE="/tmp/dns_init_done"
 
 start_dns_redirection()
 {
+  # Setup redirection enabled mark
+  touch ${MARK}
+  
   # Put dnsmasq into redirection mode
   LOCAL_IP="`uci get network.subnet0.ipaddr`"
   killall dnsmasq
-  /usr/sbin/dnsmasq --address=/#/${LOCAL_IP}
-  
-  # Setup redirection enabled mark
-  touch ${MARK}
+  /usr/sbin/dnsmasq --address=/#/${LOCAL_IP}  
 }
 
 stop_dns_redirection()
@@ -30,10 +31,11 @@ stop_dns_redirection()
 lock ${LOCK}
 trap "lock -u ${LOCK}" INT TERM EXIT
 
-if [[ "${ACTION}" == "init" ]]; then
+if [[ "${ACTION}" == "init" && ! -f ${INIT_DONE} ]]; then
   # On initialization we put dns into redirection mode
   start_dns_redirection
   rm ${DNS_LIST}
+  touch ${INIT_DONE}
 elif [[ "${ACTION}" == "finish" ]]; then
   # On termination we put dns back into normal mode
   stop_dns_redirection
