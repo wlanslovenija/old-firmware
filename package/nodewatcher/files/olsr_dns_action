@@ -6,6 +6,21 @@ MARK="/tmp/dns_redirection_enabled"
 DNS_LIST="/tmp/dns_reachable_list"
 INIT_DONE="/tmp/dns_init_done"
 
+start_dnsmasq()
+{
+  # Start dnsmasq and ensure that it has started
+  for _ in $(seq 1 5); do
+    /usr/sbin/dnsmasq $1
+    
+    if [[ "$?" == "0" ]]; then
+      break
+    else
+      # Unable to start, sleep a second and retry
+      sleep 1
+    fi
+  done
+}
+
 start_dns_redirection()
 {
   # Setup redirection enabled mark
@@ -14,14 +29,14 @@ start_dns_redirection()
   # Put dnsmasq into redirection mode
   LOCAL_IP="`uci get network.subnet0.ipaddr`"
   killall dnsmasq
-  /usr/sbin/dnsmasq --address=/#/${LOCAL_IP}  
+  start_dnsmasq --address=/#/${LOCAL_IP}  
 }
 
 stop_dns_redirection()
 {
   # Put dnsmasq into normal mode
   killall dnsmasq
-  /usr/sbin/dnsmasq
+  start_dnsmasq
   
   # Remove redirection enabled mark
   rm ${MARK}
