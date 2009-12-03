@@ -33,6 +33,7 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
@@ -44,9 +45,6 @@
 
 #define PLUGIN_INTERFACE_VERSION 5
 #define ROUTE_FLAP_TIMER_MSEC 20000
-
-/* !!! Redefine olsrd's macro as it is totally wrong !!! */
-#define TIME_DUE(s1) ((int)((s1 - now_times) * olsr_cnf->system_tick_divider))
 
 /* Pointers to original OLSR functions, so our hooks can call
  * them after they are done with their thing. */
@@ -194,6 +192,7 @@ void actions_execute_queued(void *context)
     }
   }
 
+  trigger->timer = 0;
   trigger->next_update = GET_TIMESTAMP(ROUTE_FLAP_TIMER_MSEC);
 }
 
