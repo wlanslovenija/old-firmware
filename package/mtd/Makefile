@@ -10,7 +10,7 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=mtd
-PKG_RELEASE:=8
+PKG_RELEASE:=9
 
 PKG_BUILD_DIR := $(KERNEL_BUILD_DIR)/$(PKG_NAME)
 
