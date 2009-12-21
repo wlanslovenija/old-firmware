@@ -13,9 +13,15 @@ CONF_KEEP=1
 
 # List of services to stop before flashing (to free memory)
 SERVICES_STOP="cron httpd nodogsplash openvpn"
+SERVICES_STOP_LITE="cron httpd nodogsplash"
 SERVICES_STOP_WAIT=5 # seconds
 SERVICES_KILL="$SERVICES_STOP crond ntpclient"
+SERVICES_KILL_LITE="$SERVICES_STOP_LITE crond ntpclient"
 SERVICES_TERM_WAIT=5 # seconds
+SERVICES_LITE=0
+
+UPGRADE_ONLY_KERNEL=0
+UPGRADE_ONLY_ROOT=0
 
 DOWNLOAD_TIMEOUT=420 # seconds
 DOWNLOAD_RETRY_WAIT_TIME=60 # seconds
@@ -36,11 +42,15 @@ trap "script_interrupted" INT
 usage() {
 cat <<EOF
 
-$0 [-n] [-p] <image filename ...>
+$0 [-n] [-p] [-d] [-l] [-k|-r] <image filename ...>
   -n  do not keep current configuration files after upgrade
   -p  keep current password files after upgrade
   -d  only free memory and download files (if necessary)
-      (be careful, it will sever VPN connection and will not reboot)
+      (be careful, it will sever VPN connection and will not reboot, maybe use -l)
+  -l  use lite version of freeing memory (do not sever VPN connection)
+      (be careful, there could not be enough memory, maybe use -k or -r)
+  -k  upgrade only kernel partition (but all files have to be specified)
+  -r  upgrade only root partition (but all files have to be specified)
   
   <image filename>    image filename (or HTTP/FTP URL) with embedded checksum and type
 
@@ -206,21 +216,29 @@ check_file_partition() {
 }
 
 stop_services() {
-	echo "Stopping services (if is normal for connection to go down now if the node is connected only by VPN to the network, but flashing will continue)."
+	if [[ "$SERVICES_LITE" -ne 0 ]]; then
+		echo "Stopping services (VPN will not be stopped)."
+		local services_stop="$SERVICES_STOP_LITE"
+		local services_kill="$SERVICES_KILL_LITE"
+	else
+		echo "Stopping services (if is normal for connection to go down now if the node is connected only by VPN to the network, but flashing will continue)."
+		local services_stop="$SERVICES_STOP"
+		local services_kill="$SERVICES_KILL"
+	fi
 
-	for service in $SERVICES_STOP; do
+	for service in $services_stop; do
 		"/etc/init.d/$service" stop 2>/dev/null &
 	done
 
 	sleep "$SERVICES_STOP_WAIT"
 	
-	for service in $SERVICES_KILL; do
+	for service in $services_kill; do
 		killall -q -TERM "$service" 2>/dev/null
 	done
 	
 	sleep "$SERVICES_TERM_WAIT"
 	
-	for service in $SERVICES_KILL; do
+	for service in $services_kill; do
 		killall -q -KILL "$service" 2>/dev/null
 	done	
 }
@@ -280,6 +298,15 @@ while [ -n "$1" ]; do
 		-d)
 			DOWNLOAD_ONLY=1
 			;;
+		-l)
+			SERVICES_LITE=1
+			;;
+		-k)
+			UPGRADE_ONLY_KERNEL=1
+			;;
+		-r)
+			UPGRADE_ONLY_ROOT=1
+			;;
 		-*)
 			echo "Invalid argument '$1'."
 			usage
@@ -301,6 +328,18 @@ elif [[ "$IMAGES_COUNT" -gt 2 ]]; then
 	echo "Too many image filenames."
 	usage
 	exit 1	
+fi
+if [[ "$IMAGES_COUNT" -eq 1 ]]; then
+    if [[ "$UPGRADE_ONLY_KERNEL" -ne 0 || "$UPGRADE_ONLY_ROOT" -ne 0 ]]; then
+		echo "-k and -r arguments can be used only multiple files."
+		usage
+		exit 1
+	fi
+fi
+if [[ "$UPGRADE_ONLY_KERNEL" -ne 0 && "$UPGRADE_ONLY_ROOT" -ne 0 ]]; then
+	echo "-k and -r arguments cannot be specified both at the same time."
+	usage
+	exit 1
 fi
 
 HOSTS=""
@@ -368,7 +407,7 @@ for image in $IMAGES; do
 	fi
 	
 	if remote_file "$image"; then
-		# We are resolving hostnames in advance as DNS will maybe not work later (when we sever VPN connection) anymore
+		# We are resolving hostnames in advance as DNS will maybe not work later (when we maybe sever VPN connection) anymore
 		remote_file_hostname "$image"
 		
 		if ! echo "$HOSTS" | grep -q -E " $hostname$" 2>/dev/null; then
@@ -418,22 +457,30 @@ echo "$HOSTS" >>/etc/hosts
 # Ignore SIGHUP
 trap '' HUP
 
-# We sever VPN connection now (and free memory)
+# We free memory now (and maybe sever VPN connection)
 stop_services
 
 # Prevents DHCP and traffic forwarding
 iptables -I INPUT -p udp --dport 67:68 -j DROP
 sysctl -e -w net.ipv4.ip_forward=0 >/dev/null
 
-if [[ -n "$ROOT_IMAGE" && ! -e "$ROOT_IMAGE" ]]; then
-	download_image "$ROOT_IMAGE" || flashing_failed
-	ROOT_IMAGE="$output_image"
+if [[ "$UPGRADE_ONLY_KERNEL" -ne 0 ]]; then
+	ROOT_IMAGE=""
+else
+	if [[ -n "$ROOT_IMAGE" && ! -e "$ROOT_IMAGE" ]]; then
+		download_image "$ROOT_IMAGE" || flashing_failed
+		ROOT_IMAGE="$output_image"
+	fi
 fi
 export ROOT_IMAGE
 
-if [[ -n "$KERNEL_IMAGE" && ! -e "$KERNEL_IMAGE" ]]; then
-	download_image "$KERNEL_IMAGE" || flashing_failed
-	KERNEL_IMAGE="$output_image"
+if [[ "$UPGRADE_ONLY_ROOT" -ne 0 ]]; then
+	KERNEL_IMAGE=""
+else
+	if [[ -n "$KERNEL_IMAGE" && ! -e "$KERNEL_IMAGE" ]]; then
+		download_image "$KERNEL_IMAGE" || flashing_failed
+		KERNEL_IMAGE="$output_image"
+	fi
 fi
 export KERNEL_IMAGE
 
