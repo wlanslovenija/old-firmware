@@ -39,7 +39,7 @@ stop_dns_redirection()
   start_dnsmasq
   
   # Remove redirection enabled mark
-  rm ${MARK}
+  rm -f ${MARK}
 }
 
 # Acquire lock
@@ -49,7 +49,7 @@ trap "lock -u ${LOCK}" INT TERM EXIT
 if [[ "${ACTION}" == "init" && ! -f ${INIT_DONE} ]]; then
   # On initialization we put dns into redirection mode
   start_dns_redirection
-  rm ${DNS_LIST}
+  rm -f ${DNS_LIST}
   touch ${INIT_DONE}
 elif [[ "${ACTION}" == "finish" ]]; then
   # On termination we put dns back into normal mode
@@ -71,7 +71,7 @@ elif [[ "${ACTION}" == "del" ]]; then
   if [[ "${LIST}" == "" && ! -f ${MARK} ]]; then
     # All DNS servers have become unreachable
     start_dns_redirection
-    rm ${DNS_LIST}
+    rm -f ${DNS_LIST}
   fi
 fi
 

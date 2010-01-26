@@ -57,7 +57,7 @@ stop_traffic_redirection()
   iptables_retry -D INPUT -p tcp --dport 2051 -j ACCEPT
   
   # Remove redirection enabled mark
-  rm ${MARK}
+  rm -f ${MARK}
 }
 
 # Acquire lock
