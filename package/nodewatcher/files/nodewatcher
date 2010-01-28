@@ -54,12 +54,14 @@ general_stats()
   
   # Wireless parameters
   WIFI_IFACE="`iwconfig 2>/dev/null | grep ESSID | awk '{ print $1 }' | head -n 1`"
-  show_entry "wifi.bssid" "`iwconfig 2>/dev/null | grep Cell | awk '{ print $5 }'`"
-  show_entry "wifi.essid" "`iwconfig 2>/dev/null | grep ESSID | awk '{ split($4, a, \"\\"\"); printf(\"%s\", a[2]); }'`"
-  show_entry "wifi.frequency" "`iwconfig 2>/dev/null | grep Frequency | awk '{ print $2 }' | cut -d ':' -f 2 | head -n 1`"
+  show_entry "wifi.bssid" "`iwconfig ${WIFI_IFACE} 2>/dev/null | grep Cell | awk '{ print $5 }'`"
+  show_entry "wifi.essid" "`iwconfig ${WIFI_IFACE} 2>/dev/null | grep ESSID | awk '{ split($4, a, \"\\"\"); printf(\"%s\", a[2]); }'`"
+  show_entry "wifi.frequency" "`iwconfig ${WIFI_IFACE} 2>/dev/null | grep Frequency | awk '{ print $2 }' | cut -d ':' -f 2`"
   # Commented out because of the iwlist (madwifi) memory leak, #209
   #show_entry "wifi.cells" "`iwlist scan 2>/dev/null | grep 'Cell.*Address' | wc -l`"
-  show_entry "wifi.mac" "`ifconfig $WIFI_IFACE | grep HWaddr | awk '{ print $5 }' | head -n 1`"
+  show_entry "wifi.mac" "`ifconfig ${WIFI_IFACE} | grep HWaddr | awk '{ print $5 }' | head -n 1`"
+  show_entry "wifi.rts" "`iwconfig ${WIFI_IFACE} | grep -Eo 'RTS thr.(off|[0-9]+ B)' | grep -Eo 'off|[0-9]+'`"
+  show_entry "wifi.frag" "`iwconfig ${WIFI_IFACE} | grep -Eo 'Fragment thr.(off|[0-9]+ B)' | grep -Eo 'off|[0-9]+'`"
 
   # DNS metrics
   show_entry_from_file "dns.local" /var/dns_test_local "0"
