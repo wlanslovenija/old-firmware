@@ -1,0 +1,11 @@
+--- olsrd-0.5.6-r8/src/olsr_cfg.h.orig	2010-01-28 13:58:10.000000000 +0100
++++ olsrd-0.5.6-r8/src/olsr_cfg.h	2010-01-28 13:58:16.000000000 +0100
+@@ -54,7 +54,7 @@
+ 
+ #define TESTLIB_PATH 0
+ #define SYSLOG_NUMBERING 0
+-#define SOURCE_IP_ROUTES 0
++#define SOURCE_IP_ROUTES 1
+ 
+ #ifndef LINUX_POLICY_ROUTING
+ #if defined linux
