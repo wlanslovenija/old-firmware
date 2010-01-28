@@ -28,8 +28,6 @@ define Package/nodewatcher/install
 	$(INSTALL_BIN) ./files/opkgwatcher $(1)/www/cgi-bin
 	$(INSTALL_DIR) $(1)/etc/nodewatcher
 	$(CP) ./files/parse_nds.awk $(1)/etc/nodewatcher
-	$(INSTALL_DIR) $(1)/etc/crontabs/run.30
-	$(INSTALL_BIN) ./files/solar_measure $(1)/etc/crontabs/run.30
 	$(INSTALL_DIR) $(1)/etc/crontabs/run.5
 	$(INSTALL_BIN) ./files/check_wifi_channel $(1)/etc/crontabs/run.5
 	$(INSTALL_BIN) ./files/check_sanity $(1)/etc/crontabs/run.5
