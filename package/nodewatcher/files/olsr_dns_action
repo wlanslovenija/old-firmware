@@ -1,50 +1,13 @@
 #!/bin/sh
 ACTION="$1"
 ROUTE="$2"
-LOCK="/var/lock/dns_redirection"
-MARK="/tmp/dns_redirection_enabled"
 DNS_LIST="/tmp/dns_reachable_list"
 INIT_DONE="/tmp/dns_init_done"
 
-start_dnsmasq()
-{
-  # Start dnsmasq and ensure that it has started
-  for _ in $(seq 1 5); do
-    /usr/sbin/dnsmasq $1
-    
-    if [[ "$?" == "0" ]]; then
-      break
-    else
-      # Unable to start, sleep a second and retry
-      sleep 1
-    fi
-  done
-}
+# Include common functions
+. /etc/actions.d/actions_common.sh
 
-start_dns_redirection()
-{
-  # Setup redirection enabled mark
-  touch ${MARK}
-  
-  # Put dnsmasq into redirection mode
-  LOCAL_IP="`uci get network.subnet0.ipaddr`"
-  killall dnsmasq
-  start_dnsmasq --address=/#/${LOCAL_IP}  
-}
-
-stop_dns_redirection()
-{
-  # Put dnsmasq into normal mode
-  killall dnsmasq
-  start_dnsmasq
-  
-  # Remove redirection enabled mark
-  rm -f ${MARK}
-}
-
-# Acquire lock
-lock ${LOCK}
-trap "lock -u ${LOCK}" INT TERM EXIT
+init_action
 
 if [[ "${ACTION}" == "init" && ! -f ${INIT_DONE} ]]; then
   # On initialization we put dns into redirection mode
@@ -54,27 +17,30 @@ if [[ "${ACTION}" == "init" && ! -f ${INIT_DONE} ]]; then
 elif [[ "${ACTION}" == "finish" ]]; then
   # On termination we put dns back into normal mode
   stop_dns_redirection
+  rm -f ${DNS_LIST}
+  rm -f ${INIT_DONE}
 elif [[ "${ACTION}" == "add" ]]; then
   # DNS server should now be reachable
   OLD_LIST=$(cat ${DNS_LIST} 2>/dev/null)
   echo "${ROUTE}" >> ${DNS_LIST}
   
-  if [[ "${OLD_LIST}" == "" && -f ${MARK} ]]; then
+  if [[ "${OLD_LIST}" == "" ]]; then
     # A DNS server has become reachable again
-    stop_dns_redirection
+    unmark_dns_down
+    
+    if [[ -f ${MARK_DNS} ]]; then
+      stop_dns_redirection
+    fi
   fi
 elif [[ "${ACTION}" == "del" ]]; then
   # DNS server has become unreachable
   LIST=$(grep -v "${ROUTE}" ${DNS_LIST})
   echo "${LIST}" > ${DNS_LIST}
 
-  if [[ "${LIST}" == "" && ! -f ${MARK} ]]; then
+  if [[ "${LIST}" == "" && ! -f ${MARK_DNS} ]]; then
     # All DNS servers have become unreachable
-    start_dns_redirection
+    try_dns_redirection dns
     rm -f ${DNS_LIST}
   fi
 fi
-
-# Release lock
-lock -u ${LOCK}
 

@@ -1,88 +1,36 @@
 #!/bin/sh
 ACTION="$1"
 ROUTE="$2"
-LOCK="/var/lock/traffic_redirection"
-MARK="/tmp/traffic_redirection_enabled"
+INIT_DONE="/tmp/gw_init_done"
 
-iptables_retry()
-{
-  RESULT=0
-  for _ in $(seq 1 5); do
-    iptables $@ 2> /tmp/iptables_errors.log 2>&1
-    RESULT=$?
-    
-    if [[ "${RESULT}" == "4" ]]; then
-      # Error code 4 indicates a temporary resource problem, retry
-      sleep 1
-    else
-      break
-    fi
-  done
-  
-  if [[ "${RESULT}" == "4" ]]; then
-    # Unable to modify netfilter rules, state is undefined and we must reboot
-    reboot
-  elif [[ "${RESULT}" != "0" ]]; then
-    # Some other error has ocurred, report it so nodewatcher will notice it
-    echo "${RESULT}" > /tmp/iptables_redirection_problem
-  fi
-}
+# Include common functions
+. /etc/actions.d/actions_common.sh
 
-generate_rules()
-{
-  NF_ACTION="$1"
-  
-  iptables_retry -t nat -${NF_ACTION} PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} -d ${LOCAL_IP} -j CLIENT_REDIRECT
-  iptables_retry -t nat -${NF_ACTION} PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} ! -d 10.254.0.0/16 -j CLIENT_REDIRECT
-}
-
-start_traffic_redirection()
-{
-  # Insert iptables rule to forward incoming HTTP traffic (only from client subnet)
-  iptables_retry -t nat -N CLIENT_REDIRECT
-  generate_rules "I"
-  iptables_retry -t nat -A CLIENT_REDIRECT -p tcp --dport 80 -j DNAT --to-destination ${LOCAL_IP}:2051
-  iptables_retry -I INPUT -p tcp --dport 2051 -j ACCEPT
-  
-  # Setup redirection enabled mark
-  touch ${MARK}
-}
-
-stop_traffic_redirection()
-{
-  # Remove iptables redirection rule
-  generate_rules "D"
-  iptables_retry -t nat -F CLIENT_REDIRECT
-  iptables_retry -t nat -X CLIENT_REDIRECT
-  iptables_retry -D INPUT -p tcp --dport 2051 -j ACCEPT
-  
-  # Remove redirection enabled mark
-  rm -f ${MARK}
-}
-
-# Acquire lock
-lock ${LOCK}
-trap "lock -u ${LOCK}" INT TERM EXIT
+init_action
 
 # Get some variables
 LOCAL_IP="`uci get network.subnet0.ipaddr`"
 CLIENT_SUBNET="${LOCAL_IP}/`uci get network.subnet0.netmask`"
 
 # Check what action to take
-if [[ "${ACTION}" == "init" ]]; then
+if [[ "${ACTION}" == "init" && ! -f ${INIT_DONE} ]]; then
   # Initialize with traffic redirection enabled
   start_traffic_redirection
+  touch ${INIT_DONE}
 elif [[ "${ACTION}" == "finish" ]]; then
   # Finish with traffic redirection disabled
-  stop_traffic_redirection
-elif [[ "${ACTION}" == "add" && -f ${MARK} ]]; then
+  if [[ -f ${MARK_TRAFFIC} ]]; then
+    stop_traffic_redirection
+  fi
+  
+  rm -f ${INIT_DONE}
+elif [[ "${ACTION}" == "add" && -f ${MARK_TRAFFIC} ]]; then
   # Internet gateway has come back up, reconfigure redirection when needed
   stop_traffic_redirection
-elif [[ "${ACTION}" == "del" && ! -f ${MARK} ]]; then
+  stop_dns_redirection
+elif [[ "${ACTION}" == "del" && ! -f ${MARK_TRAFFIC} ]]; then
   # Internet gateway has just gone down, setup request redirection
   start_traffic_redirection
+  try_dns_redirection traffic
 fi
-
-# Release lock
-lock -u ${LOCK}
 

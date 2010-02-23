@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodewatcher
 PKG_VERSION:=0.1
-PKG_RELEASE:=22
+PKG_RELEASE:=23
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -37,6 +37,7 @@ define Package/nodewatcher/install
 	$(INSTALL_DIR) $(1)/etc/actions.d
 	$(INSTALL_BIN) ./files/olsr_gateway_action $(1)/etc/actions.d/olsr_gateway_action
 	$(INSTALL_BIN) ./files/olsr_dns_action $(1)/etc/actions.d/olsr_dns_action
+	$(CP) ./files/actions_common.sh $(1)/etc/actions.d/actions_common.sh
 endef
 
 $(eval $(call BuildPackage,nodewatcher))
