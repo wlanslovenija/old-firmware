@@ -84,6 +84,7 @@ struct trigger_list {
 static struct {
   struct trigger_list *triggers;
   struct action_queue *aq;
+  struct action_queue *eq;
 } actions_conf;
 
 /* Forward declarations */
@@ -138,13 +139,19 @@ void add_trigger(const char *addr, const char *script)
 }
 
 /**
- * Executes the given script.
- *
- * @param trigger Trigger data struct
- * @param type Action type
+ * Process the execution queue.
  */
-void execute_script(const struct trigger_list *trigger, const int type)
+void process_exec_queue()
 {
+  struct action_queue *entry = actions_conf.eq;
+  if (!entry)
+    return;
+  
+  /* Get descriptor */
+  struct trigger_list *trigger = entry->trigger;
+  int type = entry->type;
+  
+  /* Execute the script */
   if (fork() == 0) {
     /* Scripts get passed the following arguments:
      *  $0 - Script path
@@ -158,6 +165,38 @@ void execute_script(const struct trigger_list *trigger, const int type)
     } else {
       execl(trigger->script, trigger->script, type == RT_ADD ? "add" : "del", inet_ntoa(trigger->trigger_addr), (char*) NULL);
     }
+  }
+}
+
+/**
+ * Executes the given script.
+ *
+ * @param trigger Trigger data struct
+ * @param type Action type
+ */
+void execute_script(const struct trigger_list *trigger, const int type)
+{
+  struct action_queue *entry = actions_conf.eq;
+  struct action_queue *prev = 0;
+  struct action_queue *old_eq = entry;
+  while (entry) {
+    prev = entry;
+    entry = entry->next;
+  }
+  
+  /* Create new entry in the queue */
+  entry = (struct action_queue*) malloc(sizeof(struct action_queue));
+  entry->trigger = trigger;
+  entry->type = type;
+  entry->next = 0;
+  if (prev)
+    prev->next = entry;
+  else
+    actions_conf.eq = entry;
+  
+  if (!old_eq) {
+    /* Nothing else in the execution queue, we may execute immediately */
+    process_exec_queue();
   }
 }
 
@@ -298,6 +337,16 @@ void actions_reap_zombies(int signal)
 {
   int status;
   waitpid(-1, &status, WNOHANG);
+  
+  /* Remove entry from execution queue */
+  struct action_queue *entry = actions_conf.eq;
+  if (entry) { 
+    actions_conf.eq = entry->next;
+    free(entry);
+  
+    /* Check the queue for more tasks */
+    process_exec_queue();
+  }
 }
 
 int olsrd_plugin_init(void)
@@ -335,6 +384,7 @@ static void my_fini(void) __attribute__ ((destructor));
 static void my_init(void)
 {
   actions_conf.aq = 0;
+  actions_conf.eq = 0;
   actions_conf.triggers = 0;
 }
 
@@ -347,10 +397,21 @@ static void my_fini(void)
   struct action_queue *a_tmp;
   struct trigger_list *t_entry = actions_conf.triggers;
   struct trigger_list *t_tmp;
+  int status;
 
-  /* Free all triggers */
+  /* Execute finish on all triggers */
   while (t_entry) {
     execute_script(t_entry, RT_FINISH);
+    t_entry = t_entry->next;
+  }
+
+  /* Wait for all scripts to complete */
+  while (actions_conf.eq != 0) {
+    sleep(1);
+  }
+  
+  /* Free all triggers */
+  while (t_entry) {
     t_tmp = t_entry->next;
     free(t_entry->script);
     free(t_entry);
@@ -365,6 +426,7 @@ static void my_fini(void)
   }
 
   actions_conf.aq = 0;
+  actions_conf.eq = 0;
   actions_conf.triggers = 0;
 }
 

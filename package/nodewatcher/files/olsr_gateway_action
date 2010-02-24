@@ -6,8 +6,6 @@ INIT_DONE="/tmp/gw_init_done"
 # Include common functions
 . /etc/actions.d/actions_common.sh
 
-init_action
-
 # Get some variables
 LOCAL_IP="`uci get network.subnet0.ipaddr`"
 CLIENT_SUBNET="${LOCAL_IP}/`uci get network.subnet0.netmask`"

@@ -1,7 +1,6 @@
 #
 # Common functions for nodewatcher OLSR actions.
 #
-GW_LOCK="/var/lock/gw_redirection"
 MARK_TRAFFIC="/tmp/traffic_redirection_enabled"
 MARK_DNS="/tmp/dns_redirection_enabled"
 MARK_DNS_DOWN="/tmp/dns_servers_down"
@@ -101,6 +100,13 @@ unmark_dns_down()
   rm -f ${MARK_DNS_DOWN}
 }
 
+kill_gracefully()
+{
+  killall -q $1
+  sleep 1
+  killall -q -9 $1
+}
+
 start_dns_redirection()
 {
   # Setup redirection enabled mark
@@ -108,24 +114,17 @@ start_dns_redirection()
   
   # Put dnsmasq into redirection mode
   LOCAL_IP="`uci get network.subnet0.ipaddr`"
-  killall dnsmasq
+  kill_gracefully dnsmasq
   start_dnsmasq --address=/#/${LOCAL_IP}  
 }
 
 stop_dns_redirection()
 {
   # Put dnsmasq into normal mode
-  killall dnsmasq
+  kill_gracefully dnsmasq
   start_dnsmasq
   
   # Remove redirection enabled mark
   rm -f ${MARK_DNS}
-}
-
-init_action()
-{
-  # Acquire lock
-  lock ${GW_LOCK}
-  trap "lock -u ${GW_LOCK}" INT TERM EXIT
 }
 

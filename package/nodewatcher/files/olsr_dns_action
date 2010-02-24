@@ -7,8 +7,6 @@ INIT_DONE="/tmp/dns_init_done"
 # Include common functions
 . /etc/actions.d/actions_common.sh
 
-init_action
-
 if [[ "${ACTION}" == "init" && ! -f ${INIT_DONE} ]]; then
   # On initialization we put dns into redirection mode
   start_dns_redirection
@@ -17,6 +15,7 @@ if [[ "${ACTION}" == "init" && ! -f ${INIT_DONE} ]]; then
 elif [[ "${ACTION}" == "finish" ]]; then
   # On termination we put dns back into normal mode
   stop_dns_redirection
+  unmark_dns_down
   rm -f ${DNS_LIST}
   rm -f ${INIT_DONE}
 elif [[ "${ACTION}" == "add" ]]; then
