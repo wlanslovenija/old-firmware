@@ -221,7 +221,7 @@ stop_services() {
 		local services_stop="$SERVICES_STOP_LITE"
 		local services_kill="$SERVICES_KILL_LITE"
 	else
-		echo "Stopping services (if is normal for connection to go down now if the node is connected only by VPN to the network, but flashing will continue)."
+		echo "Stopping services (it is normal for the connection to go down now if the node is connected only by VPN to the network, but flashing will continue)."
 		local services_stop="$SERVICES_STOP"
 		local services_kill="$SERVICES_KILL"
 	fi
