@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodewatcher
 PKG_VERSION:=0.1
-PKG_RELEASE:=24
+PKG_RELEASE:=25
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -29,9 +29,9 @@ define Package/nodewatcher/install
 	$(INSTALL_DIR) $(1)/etc/nodewatcher
 	$(CP) ./files/parse_nds.awk $(1)/etc/nodewatcher
 	$(INSTALL_DIR) $(1)/etc/crontabs/run.5
-	$(INSTALL_BIN) ./files/check_wifi_channel $(1)/etc/crontabs/run.5
-	$(INSTALL_BIN) ./files/check_sanity $(1)/etc/crontabs/run.5
-	$(INSTALL_BIN) ./files/check_dns $(1)/etc/crontabs/run.5
+	$(INSTALL_BIN) ./files/check_wifi_channel $(1)/etc/crontabs/run.5/01-check_wifi_channel
+	$(INSTALL_BIN) ./files/check_sanity $(1)/etc/crontabs/run.5/00-check_sanity
+	$(INSTALL_BIN) ./files/check_dns $(1)/etc/crontabs/run.5/02-check_dns
 	$(INSTALL_DIR) $(1)/www/nullhttpd
 	$(CP) -r ./files/htdocs/* $(1)/www/nullhttpd
 	$(INSTALL_DIR) $(1)/etc/actions.d
