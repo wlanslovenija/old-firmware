@@ -2,14 +2,14 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodewatcher
 PKG_VERSION:=0.1
-PKG_RELEASE:=25
+PKG_RELEASE:=26
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/nodewatcher
   SECTION:=utils
   CATEGORY:=Utilities
-  DEPENDS:=+busybox +cronscripts +nullhttpd +olsrd-mod-actions
+  DEPENDS:=+busybox +cronscripts
   TITLE:=NodeWatcher
 endef
 

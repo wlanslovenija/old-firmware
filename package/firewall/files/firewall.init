@@ -29,8 +29,14 @@ start() {
 	FALLBACK_DEV=${FALLBACK_IF%%:*}
 	VPN_DEV="tap+"
 	
-	WIFI_IN="-i $WIFI_DEV -s $WIFI_ADDR/$WIFI_MASK"
-	MESH_IN="-i $MESH_DEV -s ! $WIFI_ADDR/$WIFI_MASK"
+	if [[ "$WIFI_ADDR" != "" ]]; then
+	  WIFI_IN="-i $WIFI_DEV -s $WIFI_ADDR/$WIFI_MASK"
+	  MESH_IN="-i $MESH_DEV -s ! $WIFI_ADDR/$WIFI_MASK"
+	else
+	  WIFI_IN=""
+	  MESH_IN="-i $MESH_DEV"
+	fi
+	
 	LAN_IN="-i $LAN_DEV -s $LAN_ADDR/$LAN_MASK"
 	[ -n "$LAN_IF" ] && LANMESH_IN="-i $LANMESH_DEV -s ! $LAN_ADDR/$LAN_MASK" || LANMESH_IN="-i $LANMESH_DEV"
 	WAN_IN="-i $WAN_DEV -s ! $FALLBACK_ADDR/$FALLBACK_MASK"

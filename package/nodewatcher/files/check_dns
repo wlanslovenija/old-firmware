@@ -4,6 +4,11 @@ LOOKUP_LOCAL="localhost"
 LOOKUP_REMOTE="dns-test.wlan"
 REMOTE_RESPONSE="127.0.0.1"
 
+if [ ! -x /usr/sbin/dnsmasq ]; then
+  # DNS server is not installed, ignore this test
+  exit 0
+fi
+
 if [ ! -f /tmp/traffic_redirection_enabled ]; then
   # Local checks (is dnsmasq functioning properly?)
   nslookup ${LOOKUP_LOCAL} > /dev/null
