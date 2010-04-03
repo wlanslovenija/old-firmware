@@ -43,4 +43,7 @@ olsrd_plugin_init(void);
 int 
 olsrd_plugin_interface_version(void);
 
+void
+actions_reap_zombies(int);
+
 #endif

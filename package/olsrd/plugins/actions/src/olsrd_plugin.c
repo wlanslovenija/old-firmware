@@ -131,7 +131,7 @@ void add_trigger(const char *addr, const char *script)
 {
   struct trigger_list *entry;
   
-  entry = (struct trigger_list*) olsr_malloc(sizeof(struct trigger_list));
+  entry = (struct trigger_list*) olsr_malloc(sizeof(struct trigger_list), "actions plugin");
   entry->script = (char*) script;
   if (inet_aton(addr, &entry->trigger_addr) == 0) {
     fprintf(stderr, "\nInvalid address \"%s\", ignoring\n", addr);
@@ -199,7 +199,7 @@ void process_exec_queue()
  * @param trigger Trigger data struct
  * @param type Action type
  */
-void execute_script(const struct trigger_list *trigger, const int type)
+void execute_script(struct trigger_list *trigger, const int type)
 {
   struct action_queue *entry = actions_conf.eq;
   struct action_queue *prev = 0;
@@ -210,7 +210,7 @@ void execute_script(const struct trigger_list *trigger, const int type)
   }
   
   /* Create new entry in the queue */
-  entry = (struct action_queue*) olsr_malloc(sizeof(struct action_queue));
+  entry = (struct action_queue*) olsr_malloc(sizeof(struct action_queue), "actions plugin");
   entry->trigger = trigger;
   entry->type = type;
   entry->next = 0;
@@ -294,7 +294,7 @@ void queue_execute_script(struct trigger_list *trigger, const int type)
   }
   
   /* Create new entry in the queue */
-  entry = (struct action_queue*) olsr_malloc(sizeof(struct action_queue));
+  entry = (struct action_queue*) olsr_malloc(sizeof(struct action_queue), "actions plugin");
   entry->trigger = trigger;
   entry->type = type;
   entry->next = actions_conf.aq;
