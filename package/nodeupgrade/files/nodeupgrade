@@ -458,8 +458,10 @@ fi
 # (we do not clean them in the case of failed flash, though)
 echo "$HOSTS" >>/etc/hosts
 
-# Ignore SIGHUP
+# Ignore SIGHUP, SIGTTIN and SIGTTOU
 trap '' HUP
+trap '' TTIN
+trap '' TTOU
 
 # We free memory now (and maybe sever VPN connection)
 stop_services
