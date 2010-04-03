@@ -12,13 +12,17 @@ CONF_TGZ="$TMP_PARTITION/sysupgrade.tgz"
 CONF_KEEP=1
 
 # List of services to stop before flashing (to free memory)
-SERVICES_STOP="cron httpd nodogsplash openvpn"
-SERVICES_STOP_LITE="cron httpd nodogsplash"
+SERVICES_STOP="cron httpd nodogsplash nullhttpd openvpn"
+SERVICES_STOP_LITE="cron httpd nodogsplash nullhttpd"
 SERVICES_STOP_WAIT=5 # seconds
 SERVICES_KILL="$SERVICES_STOP crond ntpclient"
 SERVICES_KILL_LITE="$SERVICES_STOP_LITE crond ntpclient"
 SERVICES_TERM_WAIT=5 # seconds
 SERVICES_LITE=0
+
+# List of programs and files to (additionaly) include in ramdisk
+export RAMFS_COPY_BIN="/bin/ps /bin/dmesg /sbin/logread /sbin/ifconfig /usr/bin/free /usr/bin/top /bin/netstat"
+export RAMFS_COPY_DATA="/etc/passwd /etc/shells"
 
 UPGRADE_ONLY_KERNEL=0
 UPGRADE_ONLY_ROOT=0
@@ -504,8 +508,11 @@ trap "flashing_failed" EXIT
 echo "Killing watchdog."
 killall -q -TERM watchdog 2>/dev/null
 
+# This can kill OLSR if actions plugin is not enabled or USR1 signal ignored
+echo "Disabling OLSR actions plugin."
+killall -q -USR1 olsrd 2>/dev/null
+
 # And we fly
-# (it is not possible to SSH login anymore from here on)
 echo "Switching to ramdisk and upgrading."
 run_ramfs '. /etc/functions.sh; include /lib/upgrade; node_upgrade' 2>/dev/null
 
