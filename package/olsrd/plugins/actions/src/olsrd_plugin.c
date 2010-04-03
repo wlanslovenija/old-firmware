@@ -34,6 +34,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
@@ -85,6 +86,7 @@ static struct {
   struct trigger_list *triggers;
   struct action_queue *aq;
   struct action_queue *eq;
+  bool disabled;
 } actions_conf;
 
 /* Forward declarations */
@@ -92,21 +94,21 @@ void add_trigger(const char *addr, const char *script);
 
 int olsrd_plugin_interface_version(void)
 {
-    return PLUGIN_INTERFACE_VERSION;
+  return PLUGIN_INTERFACE_VERSION;
 }
 
 static int set_trigger(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
-    char addr[20] = {0,};
-    char *script = strchr(value, '>');
-    if (script == NULL || script - value > 16 || script - value < 7)
-      return 1;
-    
-    strncpy(addr, value, script - value);
-    /* Do not forget to free this script string later when freeing
-     * triggers! */
-    add_trigger(addr, strdup(script + 1));
-    return 0;
+  char addr[20] = {0,};
+  char *script = strchr(value, '>');
+  if (script == NULL || script - value > 16 || script - value < 7)
+    return 1;
+
+  strncpy(addr, value, script - value);
+  /* Do not forget to free this script string later when freeing
+   * triggers! */
+  add_trigger(addr, strdup(script + 1));
+  return 0;
 }
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
@@ -115,8 +117,8 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 
 void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
-    *params = plugin_parameters;
-    *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
+  *params = plugin_parameters;
+  *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
 }
 
 /**
@@ -129,9 +131,13 @@ void add_trigger(const char *addr, const char *script)
 {
   struct trigger_list *entry;
   
-  entry = (struct trigger_list*) malloc(sizeof(struct trigger_list));
+  entry = (struct trigger_list*) olsr_malloc(sizeof(struct trigger_list));
   entry->script = (char*) script;
-  inet_aton(addr, &entry->trigger_addr);
+  if (inet_aton(addr, &entry->trigger_addr) == 0) {
+    fprintf(stderr, "\nInvalid address \"%s\", ignoring\n", addr);
+    free(entry);
+    return;
+  }
   entry->timer = 0;
   entry->next_update = GET_TIMESTAMP(ROUTE_FLAP_TIMER_MSEC);
   entry->next = actions_conf.triggers;
@@ -146,24 +152,43 @@ void process_exec_queue()
   struct action_queue *entry = actions_conf.eq;
   if (!entry)
     return;
-  
-  /* Get descriptor */
-  struct trigger_list *trigger = entry->trigger;
-  int type = entry->type;
-  
-  /* Execute the script */
-  if (fork() == 0) {
-    /* Scripts get passed the following arguments:
-     *  $0 - Script path
-     *  $1 - Operation ('add' or 'del') that ocurred
-     *  $2 - Routing entry which has been added or deleted
-     */
-    if (type == RT_INIT) {
-      execl(trigger->script, trigger->script, "init", (char*) NULL);
-    } else if (type == RT_FINISH) {
-      execl(trigger->script, trigger->script, "finish", (char*) NULL);
-    } else {
-      execl(trigger->script, trigger->script, type == RT_ADD ? "add" : "del", inet_ntoa(trigger->trigger_addr), (char*) NULL);
+
+  if (actions_conf.disabled)
+  {
+    /* We simulate exit of the script */
+    actions_reap_zombies(SIGCHLD);
+  }
+  else
+  {
+    /* Get descriptor */
+    struct trigger_list *trigger = entry->trigger;
+    int type = entry->type;
+
+    /* Execute the script */
+    int pid = fork();
+    if (pid == 0) {
+      /* Scripts get passed the following arguments:
+       *  $0 - Script path
+       *  $1 - Operation ('add' or 'del') that ocurred
+       *  $2 - Routing entry which has been added or deleted
+       */
+      if (type == RT_INIT) {
+        execl(trigger->script, trigger->script, "init", (char*) NULL);
+        const char *const err_msg = strerror(errno);
+        olsr_exit(err_msg, EXIT_FAILURE);
+      } else if (type == RT_FINISH) {
+        execl(trigger->script, trigger->script, "finish", (char*) NULL);
+        const char *const err_msg = strerror(errno);
+        olsr_exit(err_msg, EXIT_FAILURE);
+      } else {
+        execl(trigger->script, trigger->script, type == RT_ADD ? "add" : "del", inet_ntoa(trigger->trigger_addr), (char*) NULL);
+        const char *const err_msg = strerror(errno);
+        olsr_exit(err_msg, EXIT_FAILURE);
+      }
+    }
+    else if (pid < 0) {
+      const char *const err_msg = strerror(errno);
+      olsr_exit(err_msg, EXIT_FAILURE);
     }
   }
 }
@@ -185,7 +210,7 @@ void execute_script(const struct trigger_list *trigger, const int type)
   }
   
   /* Create new entry in the queue */
-  entry = (struct action_queue*) malloc(sizeof(struct action_queue));
+  entry = (struct action_queue*) olsr_malloc(sizeof(struct action_queue));
   entry->trigger = trigger;
   entry->type = type;
   entry->next = 0;
@@ -269,7 +294,7 @@ void queue_execute_script(struct trigger_list *trigger, const int type)
   }
   
   /* Create new entry in the queue */
-  entry = (struct action_queue*) malloc(sizeof(struct action_queue));
+  entry = (struct action_queue*) olsr_malloc(sizeof(struct action_queue));
   entry->trigger = trigger;
   entry->type = type;
   entry->next = actions_conf.aq;
@@ -336,6 +361,7 @@ int actions_del_olsr_v4_route(const struct rt_entry *r)
 void actions_reap_zombies(int signal)
 {
   int status;
+  /* We ignore that maybe there was no child (if this call was simulated when the plugin is disabled) */
   waitpid(-1, &status, WNOHANG);
   
   /* Remove entry from execution queue */
@@ -349,6 +375,14 @@ void actions_reap_zombies(int signal)
   }
 }
 
+/**
+ * Disable the plugin on SIGUSR1 signal.
+ */
+void disable_plugin(int signal)
+{
+	actions_conf.disabled = true;
+}
+
 int olsrd_plugin_init(void)
 {
   /* Ensure that no zombies will be created by our forks */
@@ -356,7 +390,21 @@ int olsrd_plugin_init(void)
   sa.sa_handler = &actions_reap_zombies;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_NOCLDWAIT;
-  sigaction(SIGCHLD, &sa, NULL);
+  if (sigaction(SIGCHLD, &sa, NULL) != 0) {
+    const char *const err_msg = strerror(errno);
+    olsr_exit(err_msg, EXIT_FAILURE);
+    return 0;
+  }
+
+  /* Register SIGUSR1 signal handler (which disables the plugin) */
+  sa.sa_handler = &disable_plugin;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  if (sigaction(SIGUSR1, &sa, NULL) != 0) {
+    const char *const err_msg = strerror(errno);
+    olsr_exit(err_msg, EXIT_FAILURE);
+    return 0;
+  }
 
   /* Register routing hooks */
   orig_addroute_function = olsr_addroute_function;
@@ -386,6 +434,7 @@ static void my_init(void)
   actions_conf.aq = 0;
   actions_conf.eq = 0;
   actions_conf.triggers = 0;
+  actions_conf.disabled = false;
 }
 
 /**
@@ -428,5 +477,6 @@ static void my_fini(void)
   actions_conf.aq = 0;
   actions_conf.eq = 0;
   actions_conf.triggers = 0;
+  actions_conf.disabled = false;
 }
 
