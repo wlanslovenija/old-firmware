@@ -20,8 +20,7 @@ SERVICES_KILL_LITE="$SERVICES_STOP_LITE crond ntpclient"
 SERVICES_TERM_WAIT=5 # seconds
 SERVICES_LITE=0
 
-# List of programs and files to (additionaly) include in ramdisk
-export RAMFS_COPY_BIN="/bin/ps /bin/dmesg /sbin/logread /sbin/ifconfig /usr/bin/free /usr/bin/top /bin/netstat"
+# List of files to (additionaly) include in ramdisk
 export RAMFS_COPY_DATA="/etc/passwd /etc/shells"
 
 UPGRADE_ONLY_KERNEL=0
