@@ -39,15 +39,15 @@ node_upgrade() {
 	
 	if [[ -n "$FLASH_IMAGE" ]]; then
 		echo "Flashing '$FLASH_IMAGE'."
-		mtd -q -q $CONF_TGZ write "$FLASH_IMAGE" linux 2>/dev/null || flashing_failed
+		mtd $CONF_TGZ write "$FLASH_IMAGE" linux || flashing_failed
 	else
 		if [[ -n "$KERNEL_IMAGE" ]]; then
 			echo "Flashing '$KERNEL_IMAGE'."
-			mtd -q -q write "$KERNEL_IMAGE" vmlinux.bin.l7 2>/dev/null || flashing_failed
+			mtd write "$KERNEL_IMAGE" vmlinux.bin.l7 || flashing_failed
 		fi
 		if [[ -n "$ROOT_IMAGE" ]]; then
 			echo "Flashing '$ROOT_IMAGE'."
-			mtd -q -q $CONF_TGZ write "$ROOT_IMAGE" rootfs 2>/dev/null || flashing_failed
+			mtd $CONF_TGZ write "$ROOT_IMAGE" rootfs || flashing_failed
 		fi
 	fi
 	

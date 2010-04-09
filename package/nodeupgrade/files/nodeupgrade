@@ -515,7 +515,7 @@ killall -q -USR1 olsrd 2>/dev/null
 
 # And we fly
 echo "Switching to ramdisk and upgrading."
-run_ramfs '. /etc/functions.sh; include /lib/upgrade; node_upgrade' 2>/dev/null
+run_ramfs '. /etc/functions.sh; include /lib/upgrade; node_upgrade'
 
 # We should not come here
 flashing_failed
