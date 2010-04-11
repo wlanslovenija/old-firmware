@@ -7,7 +7,7 @@ PASSWORD_FILES="/etc/passwd /etc/group"
 PASSWORD_KEEP=0
 
 # List of configuration files to keep after upgrade
-CONF_FILES="/etc/dropbear/dropbear_dss_host_key /etc/dropbear/dropbear_rsa_host_key"
+CONF_FILES="/etc/dropbear/dropbear_dss_host_key /etc/dropbear/dropbear_rsa_host_key /etc/whitelist.mac"
 CONF_TGZ="$TMP_PARTITION/sysupgrade.tgz"
 CONF_KEEP=1
 
