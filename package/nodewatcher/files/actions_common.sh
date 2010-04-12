@@ -21,7 +21,7 @@ iptables_retry()
   done
   
   if [[ "${RESULT}" == "4" ]]; then
-    # Unable to modify netfilter rules, state is undefined and we must reboot
+    logger "nodewatcher: Unable to modify netfilter rules, state is undefined, rebooting"
     reboot
   elif [[ "${RESULT}" != "0" ]]; then
     # Some other error has ocurred, report it so nodewatcher will notice it
@@ -39,6 +39,7 @@ generate_rules()
 
 start_traffic_redirection()
 {
+  logger "nodewatcher: Starting traffic redirection"
   # Insert iptables rule to forward incoming HTTP traffic (only from client subnet)
   iptables_retry -t nat -N CLIENT_REDIRECT
   generate_rules "I"
@@ -51,6 +52,7 @@ start_traffic_redirection()
 
 stop_traffic_redirection()
 {
+  logger "nodewatcher: Stopping traffic redirection"
   # Remove iptables redirection rule
   generate_rules "D"
   iptables_retry -t nat -F CLIENT_REDIRECT
@@ -109,6 +111,7 @@ kill_gracefully()
 
 start_dns_redirection()
 {
+  logger "nodewatcher: Starting dns redirection"
   # Setup redirection enabled mark
   touch ${MARK_DNS}
   
@@ -120,6 +123,7 @@ start_dns_redirection()
 
 stop_dns_redirection()
 {
+  logger "nodewatcher: Stopping dns redirection"
   # Put dnsmasq into normal mode
   kill_gracefully dnsmasq
   start_dnsmasq
