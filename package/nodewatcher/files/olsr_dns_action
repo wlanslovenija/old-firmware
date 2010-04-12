@@ -5,7 +5,7 @@ DNS_LIST="/tmp/dns_reachable_list"
 INIT_DONE="/tmp/dns_init_done"
 
 # Include common functions
-. /etc/actions.d/actions_common.sh
+. /lib/nodewatcher/actions.sh
 
 if [[ "${ACTION}" == "init" && ! -f ${INIT_DONE} ]]; then
   # On initialization we put dns into redirection mode

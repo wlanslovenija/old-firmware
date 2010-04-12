@@ -4,11 +4,7 @@ ROUTE="$2"
 INIT_DONE="/tmp/gw_init_done"
 
 # Include common functions
-. /etc/actions.d/actions_common.sh
-
-# Get some variables
-LOCAL_IP="`uci get network.subnet0.ipaddr`"
-CLIENT_SUBNET="${LOCAL_IP}/`uci get network.subnet0.netmask`"
+. /lib/nodewatcher/actions.sh
 
 # Check what action to take
 if [[ "${ACTION}" == "init" && ! -f ${INIT_DONE} ]]; then

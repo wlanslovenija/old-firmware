@@ -5,6 +5,8 @@ MARK_TRAFFIC="/tmp/traffic_redirection_enabled"
 MARK_DNS="/tmp/dns_redirection_enabled"
 MARK_DNS_DOWN="/tmp/dns_servers_down"
 
+. /lib/nodewatcher/common.sh
+
 iptables_retry()
 {
   RESULT=0
@@ -33,8 +35,12 @@ generate_rules()
 {
   NF_ACTION="$1"
   
-  iptables_retry -t nat -${NF_ACTION} PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} -d ${LOCAL_IP} -j CLIENT_REDIRECT
-  iptables_retry -t nat -${NF_ACTION} PREROUTING -p tcp --dport 80 -s ${CLIENT_SUBNET} ! -d 10.254.0.0/16 -j CLIENT_REDIRECT
+  # Generate rules for all subnets
+  get_client_subnets
+  for subnet in $client_subnets; do
+    iptables_retry -t nat -${NF_ACTION} PREROUTING -p tcp --dport 80 -s ${subnet} -d ${LOCAL_IP} -j CLIENT_REDIRECT
+    iptables_retry -t nat -${NF_ACTION} PREROUTING -p tcp --dport 80 -s ${subnet} ! -d 10.254.0.0/16 -j CLIENT_REDIRECT
+  done
 }
 
 start_traffic_redirection()
@@ -116,7 +122,7 @@ start_dns_redirection()
   touch ${MARK_DNS}
   
   # Put dnsmasq into redirection mode
-  LOCAL_IP="`uci get network.subnet0.ipaddr`"
+  get_local_ip
   kill_gracefully dnsmasq
   start_dnsmasq --address=/#/${LOCAL_IP}  
 }

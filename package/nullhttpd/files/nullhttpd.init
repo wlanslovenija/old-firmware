@@ -3,12 +3,21 @@
 
 START=55
 
-start() {
-  LOCAL_IP="`uci get network.subnet0.ipaddr`"
-  CLIENT_SUBNET="${LOCAL_IP}/`uci get network.subnet0.netmask`"
+. /lib/nodewatcher/common.sh
 
+start() {
+  get_local_ip
   /usr/bin/nullhttpd -h ${LOCAL_IP} -p 2051 -r very_unlikely_filename_42.html -b /www/nullhttpd -d /var/run/nullhttpd.pid
-  iptables -I INPUT -p tcp --dport 2051 ! -s ${CLIENT_SUBNET} -j REJECT --reject-with tcp-reset
+  
+  iptables -N NULLHTTPD_POLICY
+  iptables -I INPUT -p tcp --dport 2051 -j NULLHTTPD_POLICY
+  
+  get_client_subnets
+  for subnet in $client_subnets; do
+    iptables -A NULLHTTPD_POLICY -s ${subnet} -j RETURN
+  done
+  
+  iptables -A NULLHTTPD_POLICY -j REJECT --reject-with tcp-reset
 }
 
 stop() {
