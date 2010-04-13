@@ -1,21 +1,20 @@
 #
-# Copyright (C) 2006-2008 OpenWrt.org
+# Copyright (C) 2006-2009 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
 #
-# $Id: Makefile 10829 2008-04-14 02:06:35Z nico $
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wireless-tools
 PKG_VERSION:=29
-PKG_MINOR:=.pre21
-PKG_RELEASE:=2
+PKG_MINOR:=
+PKG_RELEASE:=4
 
 PKG_SOURCE:=wireless_tools.$(PKG_VERSION)$(PKG_MINOR).tar.gz
 PKG_SOURCE_URL:=http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux
-PKG_MD5SUM:=953774d6a34050bae4ef3bfa731f6653
+PKG_MD5SUM:=e06c222e186f7cc013fd272d023710cb
 TAR_OPTIONS += || true
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/wireless_tools.$(PKG_VERSION)
@@ -56,6 +55,7 @@ define Build/Compile
 	$(MAKE) -C $(PKG_BUILD_DIR) \
 		$(TARGET_CONFIGURE_OPTS) \
 		CFLAGS="$(TARGET_CFLAGS) -I." \
+		BUILD_WE_ESSENTIAL=y \
 		libiw.so.$(PKG_VERSION) iwmulticall
 	$(MAKE) -C $(PKG_BUILD_DIR) \
 		PREFIX="$(PKG_INSTALL_DIR)" \
