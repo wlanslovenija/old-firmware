@@ -36,6 +36,7 @@ generate_rules()
   NF_ACTION="$1"
   
   # Generate rules for all subnets
+  get_local_ip
   get_client_subnets
   for subnet in $client_subnets; do
     iptables_retry -t nat -${NF_ACTION} PREROUTING -p tcp --dport 80 -s ${subnet} -d ${LOCAL_IP} -j CLIENT_REDIRECT
@@ -47,8 +48,9 @@ start_traffic_redirection()
 {
   logger "nodewatcher: Starting traffic redirection"
   # Insert iptables rule to forward incoming HTTP traffic (only from client subnet)
-  iptables_retry -t nat -N CLIENT_REDIRECT
+  iptables_retry -t nat -N CLIENT_REDIRECTL
   generate_rules "I"
+  get_local_ip
   iptables_retry -t nat -A CLIENT_REDIRECT -p tcp --dport 80 -j DNAT --to-destination ${LOCAL_IP}:2051
   iptables_retry -I INPUT -p tcp --dport 2051 -j ACCEPT
   
