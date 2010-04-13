@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-trap 'killall ndsctl; exit' INT QUIT TERM EXIT
+trap 'killall -q ndsctl; exit' INT QUIT TERM EXIT
 
 NDSCTL="/usr/bin/ndsctl -s /var/run/nodogsplash.sock"
 WHITELIST_FILE="/etc/whitelist.mac"
