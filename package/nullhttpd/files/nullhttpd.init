@@ -17,10 +17,13 @@ start() {
     iptables -A NULLHTTPD_POLICY -s ${subnet} -j RETURN
   done
   
-  iptables -A NULLHTTPD_POLICY -j REJECT --reject-with tcp-reset
+  iptables -A NULLHTTPD_POLICY -p tcp -j REJECT --reject-with tcp-reset
 }
 
 stop() {
-	killall nullhttpd
-	return 0
+  kill `cat /var/run/nullhttpd.pid`
+  
+  iptables -D INPUT -p tcp --dport 2051 -j NULLHTTPD_POLICY
+  iptables -F NULLHTTPD_POLICY
+  iptables -X NULLHTTPD_POLICY
 }
