@@ -48,7 +48,7 @@ start_traffic_redirection()
 {
   logger "nodewatcher: Starting traffic redirection"
   # Insert iptables rule to forward incoming HTTP traffic (only from client subnet)
-  iptables_retry -t nat -N CLIENT_REDIRECTL
+  iptables_retry -t nat -N CLIENT_REDIRECT
   generate_rules "I"
   get_local_ip
   iptables_retry -t nat -A CLIENT_REDIRECT -p tcp --dport 80 -j DNAT --to-destination ${LOCAL_IP}:2051
