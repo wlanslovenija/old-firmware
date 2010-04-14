@@ -7,7 +7,7 @@ start() {
   . /lib/nodewatcher/common.sh
   
   get_local_ip
-  /usr/bin/nullhttpd -h ${LOCAL_IP} -p 2051 -r very_unlikely_filename_42.html -b /www/nullhttpd -d /var/run/nullhttpd.pid
+  /usr/bin/nullhttpd -h ${LOCAL_IP} -p 2051 -r /www/nullhttpd/very_unlikely_filename_42.html -b /www/nullhttpd -d /var/run/nullhttpd.pid
   
   iptables -N NULLHTTPD_POLICY
   iptables -I INPUT -p tcp --dport 2051 -j NULLHTTPD_POLICY
