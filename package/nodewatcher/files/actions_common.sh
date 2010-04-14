@@ -75,7 +75,7 @@ start_dnsmasq()
 {
   # Start dnsmasq and ensure that it has started
   for _ in $(seq 1 5); do
-    /usr/sbin/dnsmasq $1
+    /usr/sbin/dnsmasq $*
     
     if [[ "$?" == "0" ]]; then
       break
@@ -126,7 +126,7 @@ start_dns_redirection()
   # Put dnsmasq into redirection mode
   get_local_ip
   kill_gracefully dnsmasq
-  start_dnsmasq --address=/#/${LOCAL_IP}  
+  start_dnsmasq --address=/#/${LOCAL_IP} --local-ttl=1
 }
 
 stop_dns_redirection()
