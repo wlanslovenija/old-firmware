@@ -457,8 +457,9 @@ fi
 # (we do not clean them in the case of failed flash, though)
 echo "$HOSTS" >>/etc/hosts
 
-# Ignore SIGHUP, SIGTTIN and SIGTTOU
+# Ignore SIGHUP, SIGPIPE, SIGTTIN and SIGTTOU
 trap '' HUP
+trap '' PIPE
 trap '' TTIN
 trap '' TTOU
 
