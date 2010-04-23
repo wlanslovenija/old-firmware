@@ -4,6 +4,7 @@
 MARK_TRAFFIC="/tmp/traffic_redirection_enabled"
 MARK_DNS="/tmp/dns_redirection_enabled"
 MARK_DNS_DOWN="/tmp/dns_servers_down"
+LOSS_COUNTER="/tmp/loss_counter"
 
 . /lib/nodewatcher/common.sh
 
@@ -56,6 +57,9 @@ start_traffic_redirection()
   
   # Setup redirection enabled mark
   touch ${MARK_TRAFFIC}
+  
+  # Update loss counter
+  update_loss_counter
 }
 
 stop_traffic_redirection()
@@ -138,5 +142,12 @@ stop_dns_redirection()
   
   # Remove redirection enabled mark
   rm -f ${MARK_DNS}
+}
+
+update_loss_counter()
+{
+  COUNTER="`cat ${LOSS_COUNTER}`"
+  let COUNTER++
+  echo ${COUNTER} > ${LOSS_COUNTER}
 }
 
