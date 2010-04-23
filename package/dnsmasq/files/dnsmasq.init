@@ -283,6 +283,8 @@ stop() {
 		rm -f /tmp/resolv.conf
 		ln -s /tmp/resolv.conf.auto /tmp/resolv.conf
 	}
-	killall dnsmasq
+	killall -q dnsmasq
+	sleep 1
+	killall -q -9 dnsmasq
 	return 0
 }
