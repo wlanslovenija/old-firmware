@@ -130,7 +130,7 @@ check_partitions() {
 }
 
 get_magic() {
-	cat "$1" | dd bs=2 count=1 2>/dev/null | hexdump -v -n 2 -e '1/1 "%02x"'
+	cat "$1" 2>/dev/null | dd bs=2 count=1 2>/dev/null | hexdump -v -n 2 -e '1/1 "%02x"' 2>/dev/null
 }
 
 check_trx() {
