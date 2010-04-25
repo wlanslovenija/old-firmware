@@ -45,7 +45,7 @@
 #include "scheduler.h"
 
 #define PLUGIN_INTERFACE_VERSION 5
-#define ROUTE_FLAP_TIMER_MSEC 20000
+#define ROUTE_FLAP_TIMER_MSEC 10000
 
 /* Pointers to original OLSR functions, so our hooks can call
  * them after they are done with their thing. */
@@ -68,6 +68,16 @@ enum action_type {
   RT_FINISH
 };
 
+/**
+ * Trigger types:
+ *  - TG_DELAYED triggers honor ROUTE_FLAP_TIMER_MSEC for RT_DEL events
+ *  - TG_IMMEDIATE triggers are executed immediately
+ */
+enum trigger_type {
+  TG_DELAYED = 0,
+  TG_IMMEDIATE
+};
+
 struct action_queue {
   struct trigger_list *trigger;
   int type;
@@ -79,6 +89,7 @@ struct trigger_list {
   char *script;
   struct timer_entry *timer;
   clock_t next_update;
+  int type;
   struct trigger_list *next;
 };
 
@@ -90,7 +101,7 @@ static struct {
 } actions_conf;
 
 /* Forward declarations */
-void add_trigger(const char *addr, const char *script);
+void add_trigger(const char *addr, const char *script, int type);
 
 int olsrd_plugin_interface_version(void)
 {
@@ -101,13 +112,19 @@ static int set_trigger(const char *value, void *data __attribute__((unused)), se
 {
   char addr[20] = {0,};
   char *script = strchr(value, '>');
-  if (script == NULL || script - value > 16 || script - value < 7)
-    return 1;
+  int type = TG_DELAYED;
+  if (script == NULL || script - value > 16 || script - value < 7) {
+    script = strchr(value, '|');
+    if (script == NULL || script - value > 16 || script - value < 7) {
+      return 1;
+    }
+    type = TG_IMMEDIATE;
+  }
 
   strncpy(addr, value, script - value);
   /* Do not forget to free this script string later when freeing
    * triggers! */
-  add_trigger(addr, strdup(script + 1));
+  add_trigger(addr, strdup(script + 1), type);
   return 0;
 }
 
@@ -127,7 +144,7 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
  * @param addr Network address
  * @param script Script to execute
  */
-void add_trigger(const char *addr, const char *script)
+void add_trigger(const char *addr, const char *script, int type)
 {
   struct trigger_list *entry;
   
@@ -139,7 +156,8 @@ void add_trigger(const char *addr, const char *script)
     return;
   }
   entry->timer = 0;
-  entry->next_update = GET_TIMESTAMP(ROUTE_FLAP_TIMER_MSEC);
+  entry->next_update = 0;
+  entry->type = type;
   entry->next = actions_conf.triggers;
   actions_conf.triggers = entry;
 }
@@ -257,7 +275,7 @@ void actions_execute_queued(void *context)
   }
 
   trigger->timer = 0;
-  trigger->next_update = GET_TIMESTAMP(ROUTE_FLAP_TIMER_MSEC);
+  trigger->next_update = 0;
 }
 
 
@@ -283,6 +301,12 @@ void queue_execute_script(struct trigger_list *trigger, const int type)
         actions_conf.aq = entry->next;
       
       free(entry);
+      
+      /* Entry removed, if timer is set, we stop it */
+      if (trigger->timer) {
+        olsr_stop_timer(trigger->timer);
+        trigger->timer = 0;
+      }
       return;
     } else if (entry->trigger == trigger && type == entry->type) {
       /* How can this be ? */
@@ -299,17 +323,23 @@ void queue_execute_script(struct trigger_list *trigger, const int type)
   entry->type = type;
   entry->next = actions_conf.aq;
   actions_conf.aq = entry;
-
-  /* Check if we can run queue processing */
-  if (TIMED_OUT(trigger->next_update)) {
-    /* Run now and set next update timestamp */
+  
+  /* Immediate triggers should run after all route processing is done (100 ms) */
+  if (trigger->type == TG_IMMEDIATE) {
+    trigger->next_update = GET_TIMESTAMP(100);
+    olsr_set_timer(&trigger->timer, TIME_DUE(trigger->next_update), 5, OLSR_TIMER_ONESHOT, &actions_execute_queued, (void*) trigger, 0);
+    return;
+  }
+  
+  /* Add actions should be executed immediately without timers */
+  if (entry->type == RT_ADD) {
     actions_execute_queued((void*) trigger);
-
-    /* If a timer has been set, stop it */
-    olsr_stop_timer(trigger->timer);
-    trigger->timer = 0;
-  } else {
-    /* We can't run now, schedule run for a later time */
+    return;
+  }
+  
+  /* If timer not yet set, we set it now */
+  if (trigger->timer == 0) {
+    trigger->next_update = GET_TIMESTAMP(ROUTE_FLAP_TIMER_MSEC);
     olsr_set_timer(&trigger->timer, TIME_DUE(trigger->next_update), 5, OLSR_TIMER_ONESHOT, &actions_execute_queued, (void*) trigger, 0);
   }
 }
