@@ -146,7 +146,7 @@ stop_dns_redirection()
 
 update_loss_counter()
 {
-  COUNTER="`cat ${LOSS_COUNTER}`"
+  COUNTER="`cat ${LOSS_COUNTER} 2>/dev/null`"
   let COUNTER++
   echo ${COUNTER} > ${LOSS_COUNTER}
 }
