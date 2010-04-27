@@ -10,3 +10,9 @@ start() {
 stop() {
 	killall olsrd
 }
+
+restart() {
+	stop
+	sleep 10
+	start
+}
