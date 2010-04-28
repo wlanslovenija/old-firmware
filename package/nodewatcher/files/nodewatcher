@@ -63,6 +63,8 @@ general_stats()
   show_entry "wifi.rts" "`iwconfig ${WIFI_IFACE} | grep -Eo 'RTS thr.(off|[0-9]+ B)' | grep -Eo 'off|[0-9]+'`"
   show_entry "wifi.frag" "`iwconfig ${WIFI_IFACE} | grep -Eo 'Fragment thr.(off|[0-9]+ B)' | grep -Eo 'off|[0-9]+'`"
 
+  show_entry_from_file "wifi.errors" /tmp/wifi_errors_counter "0"
+
   # DNS metrics
   show_entry_from_file "dns.local" /var/dns_test_local "0"
   show_entry_from_file "dns.remote" /var/dns_test_remote "0"
