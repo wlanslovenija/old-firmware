@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# NodeWatcher cgi-bin script
+# nodewatcher cgi-bin script
 # 
 
 # Configuration
@@ -148,7 +148,7 @@ mode="$1"
 if [ "$mode" == "" ]; then
   # Output header and then all supported statistics
   echo ";"
-  echo "; wlan ljubljana NodeWatcher Script"
+  echo "; nodewatcher Script"
   echo ";"
   
   general_stats
