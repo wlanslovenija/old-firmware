@@ -74,7 +74,7 @@ general_stats()
   
   # Connectivity loss counter
   show_entry_from_file "net.losses" /tmp/loss_counter "0"
-  show_entry "net.vpn.upload_limit" "`tc qdisc show dev tap0 2>/dev/null | grep -Eo '[0-9]+bit'`"
+  show_entry "net.vpn.upload_limit" "`tc qdisc show dev tap0 2>/dev/null | grep -Eo '[0-9]+.?bit'`"
   show_entry "net.vpn.mac" "`ip link show dev tap0 2>/dev/null | tail -n 1 | awk '{ print $2 }'`"
 }
 
