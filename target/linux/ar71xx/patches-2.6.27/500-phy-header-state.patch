@@ -1,0 +1,15 @@
+--- a/include/linux/phy.h	2010-05-22 21:58:33.000000000 +0200
++++ b/include/linux/phy.h	2010-05-22 21:59:21.000000000 +0200
+@@ -99,6 +99,12 @@
+ 	 */
+ 	struct mutex mdio_lock;
+ 
++	enum {
++		MDIOBUS_ALLOCATED = 1,
++		MDIOBUS_REGISTERED,
++		MDIOBUS_UNREGISTERED,
++		MDIOBUS_RELEASED,
++	} state;
+ 	struct device *dev;
+ 
+ 	/* list of all PHYs on bus */

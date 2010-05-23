@@ -1,7 +1,7 @@
 /*
  *  Bus Glue for Atheros AR71xx built-in EHCI controller.
  *
- *  Copyright (C) 2008 Gabor Juhos <juhosg@openwrt.org>
+ *  Copyright (C) 2008-2010 Gabor Juhos <juhosg@openwrt.org>
  *  Copyright (C) 2008 Imre Kaloz <kaloz@openwrt.org>
  *
  *  Parts of this file are based on Atheros' 2.6.15 BSP
@@ -30,6 +30,7 @@ static int ehci_ar71xx_init(struct usb_hcd *hcd)
 	ehci->hcs_params = ehci_readl(ehci, &ehci->caps->hcs_params);
 
 	ehci->sbrn = 0x20;
+	ehci->has_synopsys_hc_bug = 1;
 
 	ehci_reset(ehci);
 
@@ -78,7 +79,7 @@ static int ehci_ar71xx_probe(const struct hc_driver *driver,
 	res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
 	if (!res) {
 		dev_dbg(&pdev->dev, "no IRQ specified for %s\n",
-			pdev->dev.bus_id);
+			dev_name(&pdev->dev));
 		return -ENODEV;
 	}
 	irq = res->start;
@@ -86,11 +87,11 @@ static int ehci_ar71xx_probe(const struct hc_driver *driver,
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!res) {
 		dev_dbg(&pdev->dev, "no base address specified for %s\n",
-			pdev->dev.bus_id);
+			dev_name(&pdev->dev));
 		return -ENODEV;
 	}
 
-	hcd = usb_create_hcd(driver, &pdev->dev, pdev->dev.bus_id);
+	hcd = usb_create_hcd(driver, &pdev->dev, dev_name(&pdev->dev));
 	if (!hcd)
 		return -ENOMEM;
 
@@ -151,6 +152,7 @@ static const struct hc_driver ehci_ar71xx_hc_driver = {
 	.urb_enqueue		= ehci_urb_enqueue,
 	.urb_dequeue		= ehci_urb_dequeue,
 	.endpoint_disable	= ehci_endpoint_disable,
+	.endpoint_reset		= ehci_endpoint_reset,
 
 	.get_frame_number	= ehci_get_frame,
 
@@ -162,6 +164,8 @@ static const struct hc_driver ehci_ar71xx_hc_driver = {
 #endif
 	.relinquish_port	= ehci_relinquish_port,
 	.port_handed_over	= ehci_port_handed_over,
+
+	.clear_tt_buffer_complete = ehci_clear_tt_buffer_complete,
 };
 
 static const struct hc_driver ehci_ar91xx_hc_driver = {
@@ -179,6 +183,7 @@ static const struct hc_driver ehci_ar91xx_hc_driver = {
 	.urb_enqueue		= ehci_urb_enqueue,
 	.urb_dequeue		= ehci_urb_dequeue,
 	.endpoint_disable	= ehci_endpoint_disable,
+	.endpoint_reset		= ehci_endpoint_reset,
 
 	.get_frame_number	= ehci_get_frame,
 
@@ -190,6 +195,8 @@ static const struct hc_driver ehci_ar91xx_hc_driver = {
 #endif
 	.relinquish_port	= ehci_relinquish_port,
 	.port_handed_over	= ehci_port_handed_over,
+
+	.clear_tt_buffer_complete = ehci_clear_tt_buffer_complete,
 };
 
 static int ehci_ar71xx_driver_probe(struct platform_device *pdev)
@@ -204,7 +211,7 @@ static int ehci_ar71xx_driver_probe(struct platform_device *pdev)
 	pdata = pdev->dev.platform_data;
 	if (!pdata) {
 		dev_err(&pdev->dev, "no platform data specified for %s\n",
-			pdev->dev.bus_id);
+			dev_name(&pdev->dev));
 		return -ENODEV;
 	}
 

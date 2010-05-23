@@ -1,7 +1,7 @@
 /*
  *  Atheros AR71xx SoC specific prom routines
  *
- *  Copyright (C) 2008 Gabor Juhos <juhosg@openwrt.org>
+ *  Copyright (C) 2008-2009 Gabor Juhos <juhosg@openwrt.org>
  *  Copyright (C) 2008 Imre Kaloz <kaloz@openwrt.org>
  *
  *  This program is free software; you can redistribute it and/or modify it
@@ -12,114 +12,64 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/io.h>
-#include <linux/serial_reg.h>
+#include <linux/string.h>
 
 #include <asm/bootinfo.h>
 #include <asm/addrspace.h>
 #include <asm/fw/myloader/myloader.h>
 
 #include <asm/mach-ar71xx/ar71xx.h>
-#include <asm/mach-ar71xx/platform.h>
 
-struct board_rec {
-	char		*name;
-	unsigned long	mach_type;
-};
+static inline int is_valid_ram_addr(void *addr)
+{
+	if (((u32) addr > KSEG0) &&
+	    ((u32) addr < (KSEG0 + AR71XX_MEM_SIZE_MAX)))
+		return 1;
 
-static int ar71xx_prom_argc __initdata;
-static char **ar71xx_prom_argv __initdata;
-static char **ar71xx_prom_envp __initdata;
+	if (((u32) addr > KSEG1) &&
+	    ((u32) addr < (KSEG1 + AR71XX_MEM_SIZE_MAX)))
+		return 1;
 
-static struct board_rec boards[] __initdata = {
-	{
-		.name		= "411",
-		.mach_type	= AR71XX_MACH_RB_411,
-	}, {
-		.name		= "433",
-		.mach_type	= AR71XX_MACH_RB_433,
-	}, {
-		.name		= "450",
-		.mach_type	= AR71XX_MACH_RB_450,
-	}, {
-		.name		= "493",
-		.mach_type	= AR71XX_MACH_RB_493,
-	}, {
-		.name		= "AW-NR580",
-		.mach_type	= AR71XX_MACH_AW_NR580,
-	}, {
-		.name		= "AP83",
-		.mach_type	= AR71XX_MACH_AP83,
-	}, {
-		.name		= "TEW-632BRP",
-		.mach_type	= AR71XX_MACH_TEW_632BRP,
-	}, {
-		.name		= "UBNT-RS",
-		.mach_type	= AR71XX_MACH_UBNT_RS,
-	}, {
-		.name		= "UBNT-LSX",
-		.mach_type	= AR71XX_MACH_UBNT_LSX,
-	}, {
-		.name		= "WNR2000",
-		.mach_type	= AR71XX_MACH_WNR2000,
-	}, {
-		.name		= "PB42",
-		.mach_type	= AR71XX_MACH_PB42,
-	}, {
-		.name		= "MZK-W300NH",
-		.mach_type	= AR71XX_MACH_MZK_W300NH,
-	}
-};
+	return 0;
+}
 
-static __init char *ar71xx_prom_getargv(const char *name)
+static void __init ar71xx_prom_append_cmdline(const char *name,
+					      const char *value)
+{
+	char buf[COMMAND_LINE_SIZE];
+
+	snprintf(buf, sizeof(buf), " %s=%s", name, value);
+	strlcat(arcs_cmdline, buf, sizeof(arcs_cmdline));
+}
+
+static void __init ar71xx_prom_find_env(char **envp, const char *name)
 {
 	int len = strlen(name);
-	int i;
+	char **p;
 
-	if (!ar71xx_prom_argv)
-		return NULL;
+	if (!is_valid_ram_addr(envp))
+		return;
 
-	for (i = 0; i < ar71xx_prom_argc; i++) {
-		char *argv = ar71xx_prom_argv[i];
+	for (p = envp; is_valid_ram_addr(*p); p++) {
+		if (strncmp(name, *p, len) == 0 && (*p)[len] == '=') {
+			ar71xx_prom_append_cmdline(name, *p + len + 1);
+			break;
+		}
 
-		if (!argv)
-			continue;
-
-		if (strncmp(name, argv, len) == 0 && (argv)[len] == '=')
-			return argv + len + 1;
+		/* RedBoot env comes in pointer pairs - key, value */
+		if (strncmp(name, *p, len) == 0 && (*p)[len] == 0)
+			if (is_valid_ram_addr(*(++p))) {
+				ar71xx_prom_append_cmdline(name, *p);
+				break;
+			}
 	}
-
-	return NULL;
 }
 
-static __init char *ar71xx_prom_getenv(const char *envname)
-{
-	int len = strlen(envname);
-	char **env;
-
-	if (!ar71xx_prom_envp)
-		return NULL;
-
-	for (env = ar71xx_prom_envp; *env != NULL; env++)
-		if (strncmp(envname, *env, len) == 0 && (*env)[len] == '=')
-			return *env + len + 1;
-
-	return NULL;
-}
-
-static __init unsigned long find_board_byname(char *name)
-{
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(boards); i++)
-		if (strcmp(name, boards[i].name) == 0)
-			return boards[i].mach_type;
-
-	return AR71XX_MACH_GENERIC;
-}
-
-static int ar71xx_prom_init_myloader(void)
+static int __init ar71xx_prom_init_myloader(void)
 {
 	struct myloader_info *mylo;
+	char mac_buf[32];
+	char *mac;
 
 	mylo = myloader_get_info();
 	if (!mylo)
@@ -127,67 +77,90 @@ static int ar71xx_prom_init_myloader(void)
 
 	switch (mylo->did) {
 	case DEVID_COMPEX_WP543:
-		ar71xx_mach_type = AR71XX_MACH_WP543;
+		ar71xx_prom_append_cmdline("board", "WP543");
 		break;
 	default:
 		printk(KERN_WARNING "prom: unknown device id: %x\n",
 				mylo->did);
+		return 0;
 	}
-	ar71xx_set_mac_base(mylo->macs[0]);
+
+	mac = mylo->macs[0];
+	snprintf(mac_buf, sizeof(mac_buf), "%02x:%02x:%02x:%02x:%02x:%02x",
+		 mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+	ar71xx_prom_append_cmdline("ethaddr", mac_buf);
 
 	return 1;
 }
 
-static void ar71xx_prom_init_generic(void)
+#ifdef CONFIG_IMAGE_CMDLINE_HACK
+extern char __image_cmdline[];
+
+static int __init ar71xx_use__image_cmdline(void)
 {
-	char *p;
+	char *p = __image_cmdline;
+	int replace = 0;
 
-	ar71xx_prom_argc = fw_arg0;
-	ar71xx_prom_argv = (char **)fw_arg1;
-	ar71xx_prom_envp = (char **)fw_arg2;
+	if (*p == '-') {
+		replace = 1;
+		p++;
+	}
 
-	p = ar71xx_prom_getenv("board");
-	if (!p)
-		p = ar71xx_prom_getargv("board");
-	if (p)
-		ar71xx_mach_type = find_board_byname(p);
+	if (*p == '\0')
+		return 0;
 
-	p = ar71xx_prom_getenv("ethaddr");
-	if (!p)
-		p = ar71xx_prom_getargv("kmac");
-	if (p)
-		ar71xx_parse_mac_addr(p);
+	if (replace) {
+		strlcpy(arcs_cmdline, p, sizeof(arcs_cmdline));
+	} else {
+		strlcat(arcs_cmdline, " ", sizeof(arcs_cmdline));
+		strlcat(arcs_cmdline, p, sizeof(arcs_cmdline));
+	}
+
+	return 1;
+}
+#else
+static int inline ar71xx_use__image_cmdline(void) { return 0; }
+#endif
+
+static __init void ar71xx_prom_init_cmdline(int argc, char **argv)
+{
+	int i;
+
+	if (ar71xx_use__image_cmdline())
+		return;
+
+	if (!is_valid_ram_addr(argv))
+		return;
+
+	for (i = 0; i < argc; i++)
+		if (is_valid_ram_addr(argv[i])) {
+			strlcat(arcs_cmdline, " ", sizeof(arcs_cmdline));
+			strlcat(arcs_cmdline, argv[i], sizeof(arcs_cmdline));
+		}
 }
 
 void __init prom_init(void)
 {
+	char **envp;
+
 	printk(KERN_DEBUG "prom: fw_arg0=%08x, fw_arg1=%08x, "
 			"fw_arg2=%08x, fw_arg3=%08x\n",
 			(unsigned int)fw_arg0, (unsigned int)fw_arg1,
 			(unsigned int)fw_arg2, (unsigned int)fw_arg3);
 
-	ar71xx_mach_type = AR71XX_MACH_GENERIC;
 
 	if (ar71xx_prom_init_myloader())
 		return;
 
-	ar71xx_prom_init_generic();
+	ar71xx_prom_init_cmdline(fw_arg0, (char **)fw_arg1);
+
+	envp = (char **)fw_arg2;
+	ar71xx_prom_find_env(envp, "board");
+	ar71xx_prom_find_env(envp, "ethaddr");
 }
 
 void __init prom_free_prom_memory(void)
 {
 	/* We do not have to prom memory to free */
-}
-
-#define UART_READ(r) \
-	__raw_readl((void __iomem *)(KSEG1ADDR(AR71XX_UART_BASE) + 4 * (r)))
-
-#define UART_WRITE(r, v) \
-	__raw_writel((v), (void __iomem *)(KSEG1ADDR(AR71XX_UART_BASE) + 4*(r)))
-
-void prom_putchar(unsigned char ch)
-{
-	while (((UART_READ(UART_LSR)) & UART_LSR_THRE) == 0);
-	UART_WRITE(UART_TX, ch);
-	while (((UART_READ(UART_LSR)) & UART_LSR_THRE) == 0);
 }
