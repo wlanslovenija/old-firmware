@@ -155,7 +155,7 @@ if [ "$mode" == "" ]; then
   traffic_stats
   
   # Check for nodogsplash support
-  if [ -x /usr/bin/ndsctl ]; then
+  if [ -x /usr/bin/ndsctl -a -e /etc/nodewatcher/parse_nds.awk ]; then
     nds_stats
   fi
   
