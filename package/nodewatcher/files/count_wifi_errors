@@ -5,7 +5,7 @@ LAST_LINE="/tmp/wifi_errors_last_line"
 COUNTER_FILE="/tmp/wifi_errors_counter"
 PATTERN="ath_bstuck_tasklet: Stuck beacon; resetting|NETDEV WATCHDOG: wifi.*: transmit timed out"
 
-if ! dmesg | egrep -q '^\[.*\]'; then
+if ! dmesg | egrep -q '^\[[0-9. ]+\]'; then
 	# Timestamps in dmesg not enabled with CONFIG_PRINTK_TIME
 	exit 0
 fi
