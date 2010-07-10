@@ -1,7 +1,7 @@
 /*
  *  Atheros AR71xx built-in ethernet mac driver
  *
- *  Copyright (C) 2008-2010 Gabor Juhos <juhosg@openwrt.org>
+ *  Copyright (C) 2008 Gabor Juhos <juhosg@openwrt.org>
  *  Copyright (C) 2008 Imre Kaloz <kaloz@openwrt.org>
  *
  *  Based on Atheros' AG7100 driver
@@ -38,7 +38,7 @@
 #define ETH_FCS_LEN	4
 
 #define AG71XX_DRV_NAME		"ag71xx"
-#define AG71XX_DRV_VERSION	"0.5.35"
+#define AG71XX_DRV_VERSION	"0.5.16"
 
 #define AG71XX_NAPI_WEIGHT	64
 #define AG71XX_OOM_REFILL	(1 + HZ/10)
@@ -63,7 +63,8 @@
 
 #define AG71XX_RX_RING_SIZE	128
 
-#ifdef CONFIG_AG71XX_DEBUG
+#undef AG71XX_DEBUG
+#ifdef AG71XX_DEBUG
 #define DBG(fmt, args...)	printk(KERN_DEBUG fmt, ## args)
 #else
 #define DBG(fmt, args...)	do {} while (0)
@@ -82,69 +83,33 @@ struct ag71xx_desc {
 	u32	ctrl;
 #define DESC_EMPTY	BIT(31)
 #define DESC_MORE	BIT(24)
-#define DESC_PKTLEN_M	0xfff
+#define DESC_PKTLEN_M	0x1fff
 	u32	next;
 	u32	pad;
-} __attribute__((aligned(4)));
+};
 
 struct ag71xx_buf {
-	struct sk_buff		*skb;
-	struct ag71xx_desc 	*desc;
-	dma_addr_t		dma_addr;
-	u32			pad;
+	struct sk_buff	*skb;
 };
 
 struct ag71xx_ring {
 	struct ag71xx_buf	*buf;
-	u8			*descs_cpu;
+	struct ag71xx_desc	*descs;
 	dma_addr_t		descs_dma;
-	unsigned int		desc_size;
 	unsigned int		curr;
 	unsigned int		dirty;
 	unsigned int		size;
 };
 
 struct ag71xx_mdio {
-	struct mii_bus		*mii_bus;
-	int			mii_irq[PHY_MAX_ADDR];
-	void __iomem		*mdio_base;
-	struct ag71xx_mdio_platform_data *pdata;
-};
-
-struct ag71xx_int_stats {
-	unsigned long		rx_pr;
-	unsigned long		rx_be;
-	unsigned long		rx_of;
-	unsigned long		tx_ps;
-	unsigned long		tx_be;
-	unsigned long		tx_ur;
-	unsigned long		total;
-};
-
-struct ag71xx_napi_stats {
-	unsigned long		napi_calls;
-	unsigned long		rx_count;
-	unsigned long		rx_packets;
-	unsigned long		rx_packets_max;
-	unsigned long		tx_count;
-	unsigned long		tx_packets;
-	unsigned long		tx_packets_max;
-
-	unsigned long		rx[AG71XX_NAPI_WEIGHT + 1];
-	unsigned long		tx[AG71XX_NAPI_WEIGHT + 1];
-};
-
-struct ag71xx_debug {
-	struct dentry		*debugfs_dir;
-	struct dentry		*debugfs_int_stats;
-	struct dentry		*debugfs_napi_stats;
-
-	struct ag71xx_int_stats int_stats;
-	struct ag71xx_napi_stats napi_stats;
+	struct mii_bus	mii_bus;
+	int		mii_irq[PHY_MAX_ADDR];
+	void __iomem	*mdio_base;
 };
 
 struct ag71xx {
 	void __iomem		*mac_base;
+	void __iomem		*mac_base2;
 	void __iomem		*mii_ctrl;
 
 	spinlock_t		lock;
@@ -165,22 +130,18 @@ struct ag71xx {
 
 	struct work_struct	restart_work;
 	struct timer_list	oom_timer;
-
-#ifdef CONFIG_AG71XX_DEBUG_FS
-	struct ag71xx_debug	debug;
-#endif
 };
 
 extern struct ethtool_ops ag71xx_ethtool_ops;
-void ag71xx_link_adjust(struct ag71xx *ag);
 
-int ag71xx_mdio_driver_init(void) __init;
-void ag71xx_mdio_driver_exit(void);
+extern struct ag71xx_mdio *ag71xx_mdio_bus;
+extern int ag71xx_mdio_driver_init(void) __init;
+extern void ag71xx_mdio_driver_exit(void);
 
-int ag71xx_phy_connect(struct ag71xx *ag);
-void ag71xx_phy_disconnect(struct ag71xx *ag);
-void ag71xx_phy_start(struct ag71xx *ag);
-void ag71xx_phy_stop(struct ag71xx *ag);
+extern int ag71xx_phy_connect(struct ag71xx *ag);
+extern void ag71xx_phy_disconnect(struct ag71xx *ag);
+extern void ag71xx_phy_start(struct ag71xx *ag);
+extern void ag71xx_phy_stop(struct ag71xx *ag);
 
 static inline struct ag71xx_platform_data *ag71xx_get_pdata(struct ag71xx *ag)
 {
@@ -346,56 +307,85 @@ static inline int ag71xx_desc_pktlen(struct ag71xx_desc *desc)
 #define MII_CTRL_SPEED_100	1
 #define MII_CTRL_SPEED_1000	2
 
-static inline void ag71xx_check_reg_offset(struct ag71xx *ag, unsigned reg)
+static inline void ag71xx_wr(struct ag71xx *ag, unsigned reg, u32 value)
 {
+	void __iomem *r;
+
 	switch (reg) {
 	case AG71XX_REG_MAC_CFG1 ... AG71XX_REG_MAC_MFL:
-	case AG71XX_REG_MAC_IFCTL ... AG71XX_REG_INT_STATUS:
+		r = ag->mac_base + reg;
+		__raw_writel(value, r);
+		__raw_readl(r);
 		break;
-
+	case AG71XX_REG_MAC_IFCTL ... AG71XX_REG_INT_STATUS:
+		r = ag->mac_base2 + reg - AG71XX_REG_MAC_IFCTL;
+		__raw_writel(value, r);
+		__raw_readl(r);
+		break;
 	default:
 		BUG();
 	}
 }
 
-static inline void ag71xx_wr(struct ag71xx *ag, unsigned reg, u32 value)
-{
-	ag71xx_check_reg_offset(ag, reg);
-
-	__raw_writel(value, ag->mac_base + reg);
-	/* flush write */
-	(void) __raw_readl(ag->mac_base + reg);
-}
-
 static inline u32 ag71xx_rr(struct ag71xx *ag, unsigned reg)
 {
-	ag71xx_check_reg_offset(ag, reg);
+	void __iomem *r;
+	u32 ret;
 
-	return __raw_readl(ag->mac_base + reg);
+	switch (reg) {
+	case AG71XX_REG_MAC_CFG1 ... AG71XX_REG_MAC_MFL:
+		r = ag->mac_base + reg;
+		ret = __raw_readl(r);
+		break;
+	case AG71XX_REG_MAC_IFCTL ... AG71XX_REG_INT_STATUS:
+		r = ag->mac_base2 + reg - AG71XX_REG_MAC_IFCTL;
+		ret = __raw_readl(r);
+		break;
+	default:
+		BUG();
+	}
+
+	return ret;
 }
 
 static inline void ag71xx_sb(struct ag71xx *ag, unsigned reg, u32 mask)
 {
 	void __iomem *r;
 
-	ag71xx_check_reg_offset(ag, reg);
-
-	r = ag->mac_base + reg;
-	__raw_writel(__raw_readl(r) | mask, r);
-	/* flush write */
-	(void)__raw_readl(r);
+	switch (reg) {
+	case AG71XX_REG_MAC_CFG1 ... AG71XX_REG_MAC_MFL:
+		r = ag->mac_base + reg;
+		__raw_writel(__raw_readl(r) | mask, r);
+		__raw_readl(r);
+		break;
+	case AG71XX_REG_MAC_IFCTL ... AG71XX_REG_INT_STATUS:
+		r = ag->mac_base2 + reg - AG71XX_REG_MAC_IFCTL;
+		__raw_writel(__raw_readl(r) | mask, r);
+		__raw_readl(r);
+		break;
+	default:
+		BUG();
+	}
 }
 
 static inline void ag71xx_cb(struct ag71xx *ag, unsigned reg, u32 mask)
 {
 	void __iomem *r;
 
-	ag71xx_check_reg_offset(ag, reg);
-
-	r = ag->mac_base + reg;
-	__raw_writel(__raw_readl(r) & ~mask, r);
-	/* flush write */
-	(void) __raw_readl(r);
+	switch (reg) {
+	case AG71XX_REG_MAC_CFG1 ... AG71XX_REG_MAC_MFL:
+		r = ag->mac_base + reg;
+		__raw_writel(__raw_readl(r) & ~mask, r);
+		__raw_readl(r);
+		break;
+	case AG71XX_REG_MAC_IFCTL ... AG71XX_REG_INT_STATUS:
+		r = ag->mac_base2 + reg - AG71XX_REG_MAC_IFCTL;
+		__raw_writel(__raw_readl(r) & ~mask, r);
+		__raw_readl(r);
+		break;
+	default:
+		BUG();
+	}
 }
 
 static inline void ag71xx_int_enable(struct ag71xx *ag, u32 ints)
@@ -410,24 +400,12 @@ static inline void ag71xx_int_disable(struct ag71xx *ag, u32 ints)
 
 static inline void ag71xx_mii_ctrl_wr(struct ag71xx *ag, u32 value)
 {
-	struct ag71xx_platform_data *pdata = ag71xx_get_pdata(ag);
-
-	if (pdata->is_ar724x)
-		return;
-
 	__raw_writel(value, ag->mii_ctrl);
-
-	/* flush write */
 	__raw_readl(ag->mii_ctrl);
 }
 
 static inline u32 ag71xx_mii_ctrl_rr(struct ag71xx *ag)
 {
-	struct ag71xx_platform_data *pdata = ag71xx_get_pdata(ag);
-
-	if (pdata->is_ar724x)
-		return 0xffffffff;
-
 	return __raw_readl(ag->mii_ctrl);
 }
 
@@ -452,49 +430,5 @@ static void inline ag71xx_mii_ctrl_set_speed(struct ag71xx *ag,
 	t |= (speed & MII_CTRL_SPEED_MASK) << MII_CTRL_SPEED_SHIFT;
 	ag71xx_mii_ctrl_wr(ag, t);
 }
-
-#ifdef CONFIG_AG71XX_AR8216_SUPPORT
-void ag71xx_add_ar8216_header(struct ag71xx *ag, struct sk_buff *skb);
-int ag71xx_remove_ar8216_header(struct ag71xx *ag, struct sk_buff *skb,
-				int pktlen);
-static inline int ag71xx_has_ar8216(struct ag71xx *ag)
-{
-	return ag71xx_get_pdata(ag)->has_ar8216;
-}
-#else
-static inline void ag71xx_add_ar8216_header(struct ag71xx *ag,
-					   struct sk_buff *skb)
-{
-}
-
-static inline int ag71xx_remove_ar8216_header(struct ag71xx *ag,
-					      struct sk_buff *skb,
-					      int pktlen)
-{
-	return 0;
-}
-static inline int ag71xx_has_ar8216(struct ag71xx *ag)
-{
-	return 0;
-}
-#endif
-
-#ifdef CONFIG_AG71XX_DEBUG_FS
-int ag71xx_debugfs_root_init(void);
-void ag71xx_debugfs_root_exit(void);
-int ag71xx_debugfs_init(struct ag71xx *ag);
-void ag71xx_debugfs_exit(struct ag71xx *ag);
-void ag71xx_debugfs_update_int_stats(struct ag71xx *ag, u32 status);
-void ag71xx_debugfs_update_napi_stats(struct ag71xx *ag, int rx, int tx);
-#else
-static inline int ag71xx_debugfs_root_init(void) { return 0; }
-static inline void ag71xx_debugfs_root_exit(void) {}
-static inline int ag71xx_debugfs_init(struct ag71xx *ag) { return 0; }
-static inline void ag71xx_debugfs_exit(struct ag71xx *ag) {}
-static inline void ag71xx_debugfs_update_int_stats(struct ag71xx *ag,
-						   u32 status) {}
-static inline void ag71xx_debugfs_update_napi_stats(struct ag71xx *ag,
-						    int rx, int tx) {}
-#endif /* CONFIG_AG71XX_DEBUG_FS */
 
 #endif /* _AG71XX_H */

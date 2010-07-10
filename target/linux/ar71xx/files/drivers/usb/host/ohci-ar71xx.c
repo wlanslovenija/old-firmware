@@ -30,19 +30,19 @@ static int usb_hcd_ar71xx_probe(const struct hc_driver *driver,
 	res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
 	if (!res) {
 		dev_dbg(&pdev->dev, "no IRQ specified for %s\n",
-			dev_name(&pdev->dev));
+			pdev->dev.bus_id);
 		return -ENODEV;
 	}
 	irq = res->start;
 
-	hcd = usb_create_hcd(driver, &pdev->dev, dev_name(&pdev->dev));
+	hcd = usb_create_hcd(driver, &pdev->dev, pdev->dev.bus_id);
 	if (!hcd)
 		return -ENOMEM;
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!res) {
 		dev_dbg(&pdev->dev, "no base address specified for %s\n",
-			dev_name(&pdev->dev));
+			pdev->dev.bus_id);
 		ret = -ENODEV;
 		goto err_put_hcd;
 	}

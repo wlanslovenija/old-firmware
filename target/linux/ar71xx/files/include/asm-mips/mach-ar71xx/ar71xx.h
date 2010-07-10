@@ -1,7 +1,7 @@
 /*
  *  Atheros AR71xx SoC specific definitions
  *
- *  Copyright (C) 2008-2009 Gabor Juhos <juhosg@openwrt.org>
+ *  Copyright (C) 2008 Gabor Juhos <juhosg@openwrt.org>
  *  Copyright (C) 2008 Imre Kaloz <kaloz@openwrt.org>
  *
  *  Parts of this file are based on Atheros' 2.6.15 BSP
@@ -32,8 +32,6 @@
 #define AR71XX_EHCI_SIZE	0x01000000
 #define AR71XX_OHCI_BASE	0x1c000000
 #define AR71XX_OHCI_SIZE	0x01000000
-#define AR7240_OHCI_BASE	0x1b000000
-#define AR7240_OHCI_SIZE	0x01000000
 #define AR71XX_SPI_BASE		0x1f000000
 #define AR71XX_SPI_SIZE		0x01000000
 
@@ -58,28 +56,19 @@
 #define AR71XX_DMA_SIZE		0x10000
 #define AR71XX_STEREO_BASE	(AR71XX_APB_BASE + 0x000B0000)
 #define AR71XX_STEREO_SIZE	0x10000
-
-#define AR724X_PCI_CRP_BASE	(AR71XX_APB_BASE + 0x000C0000)
-#define AR724X_PCI_CRP_SIZE	0x100
-
-#define AR724X_PCI_CTRL_BASE	(AR71XX_APB_BASE + 0x000F0000)
-#define AR724X_PCI_CTRL_SIZE	0x100
-
 #define AR91XX_WMAC_BASE	(AR71XX_APB_BASE + 0x000C0000)
 #define AR91XX_WMAC_SIZE	0x30000
-
-#define AR71XX_MEM_SIZE_MIN	0x0200000
-#define AR71XX_MEM_SIZE_MAX	0x10000000
 
 #define AR71XX_CPU_IRQ_BASE	0
 #define AR71XX_MISC_IRQ_BASE	8
 #define AR71XX_MISC_IRQ_COUNT	8
 #define AR71XX_GPIO_IRQ_BASE	16
-#define AR71XX_GPIO_IRQ_COUNT	32
-#define AR71XX_PCI_IRQ_BASE     48
-#define AR71XX_PCI_IRQ_COUNT	8
+#define AR71XX_GPIO_IRQ_COUNT	16
+#define AR71XX_PCI_IRQ_BASE     32
+#define AR71XX_PCI_IRQ_COUNT	4
 
-#define AR71XX_CPU_IRQ_IP2	(AR71XX_CPU_IRQ_BASE + 2)
+#define AR71XX_CPU_IRQ_PCI	(AR71XX_CPU_IRQ_BASE + 2)
+#define AR71XX_CPU_IRQ_WMAC	(AR71XX_CPU_IRQ_BASE + 2)
 #define AR71XX_CPU_IRQ_USB	(AR71XX_CPU_IRQ_BASE + 3)
 #define AR71XX_CPU_IRQ_GE0	(AR71XX_CPU_IRQ_BASE + 4)
 #define AR71XX_CPU_IRQ_GE1	(AR71XX_CPU_IRQ_BASE + 5)
@@ -100,7 +89,7 @@
 #define AR71XX_PCI_IRQ_DEV0	(AR71XX_PCI_IRQ_BASE + 0)
 #define AR71XX_PCI_IRQ_DEV1	(AR71XX_PCI_IRQ_BASE + 1)
 #define AR71XX_PCI_IRQ_DEV2	(AR71XX_PCI_IRQ_BASE + 2)
-#define AR71XX_PCI_IRQ_CORE	(AR71XX_PCI_IRQ_BASE + 4)
+#define AR71XX_PCI_IRQ_CORE	(AR71XX_PCI_IRQ_BASE + 3)
 
 extern u32 ar71xx_ahb_freq;
 extern u32 ar71xx_cpu_freq;
@@ -111,14 +100,28 @@ enum ar71xx_soc_type {
 	AR71XX_SOC_AR7130,
 	AR71XX_SOC_AR7141,
 	AR71XX_SOC_AR7161,
-	AR71XX_SOC_AR7240,
-	AR71XX_SOC_AR7241,
-	AR71XX_SOC_AR7242,
 	AR71XX_SOC_AR9130,
 	AR71XX_SOC_AR9132
 };
 
 extern enum ar71xx_soc_type ar71xx_soc;
+
+extern unsigned long ar71xx_mach_type;
+
+#define AR71XX_MACH_GENERIC	0
+#define AR71XX_MACH_WP543	1	/* Compex WP543 */
+#define AR71XX_MACH_RB_411	2	/* MikroTik RouterBOARD 411/411A/411AH */
+#define AR71XX_MACH_RB_433	3	/* MikroTik RouterBOARD 433/433AH */
+#define AR71XX_MACH_RB_450	4	/* MikroTik RouterBOARD 450 */
+#define AR71XX_MACH_RB_493	5	/* Mikrotik RouterBOARD 493/493AH */
+#define AR71XX_MACH_AW_NR580	6	/* AzureWave AW-NR580 */
+#define AR71XX_MACH_AP83	7	/* Atheros AP83 */
+#define AR71XX_MACH_TEW_632BRP	8	/* TRENDnet TEW-632BRP */
+#define AR71XX_MACH_UBNT_RS	9	/* Ubiquiti RouterStation */
+#define AR71XX_MACH_UBNT_LSX	10	/* Ubiquiti LSX */
+#define AR71XX_MACH_WNR2000	11	/* NETGEAR WNR2000 */
+#define AR71XX_MACH_PB42	12	/* Atheros PB42 */
+#define AR71XX_MACH_MZK_W300NH	13	/* Planex MZK-W300NH */
 
 /*
  * PLL block
@@ -139,18 +142,6 @@ extern enum ar71xx_soc_type ar71xx_soc;
 
 #define AR71XX_ETH0_PLL_SHIFT		17
 #define AR71XX_ETH1_PLL_SHIFT		19
-
-#define AR724X_PLL_REG_CPU_CONFIG	0x00
-#define AR724X_PLL_REG_PCIE_CONFIG	0x18
-
-#define AR724X_PLL_DIV_SHIFT		0
-#define AR724X_PLL_DIV_MASK		0x3ff
-#define AR724X_PLL_REF_DIV_SHIFT	10
-#define AR724X_PLL_REF_DIV_MASK		0xf
-#define AR724X_AHB_DIV_SHIFT		19
-#define AR724X_AHB_DIV_MASK		0x1
-#define AR724X_DDR_DIV_SHIFT		22
-#define AR724X_DDR_DIV_MASK		0x3
 
 #define AR91XX_PLL_REG_CPU_CONFIG	0x00
 #define AR91XX_PLL_REG_ETH_CONFIG	0x04
@@ -197,6 +188,8 @@ static inline u32 ar71xx_usb_ctrl_rr(unsigned reg)
 	return __raw_readl(ar71xx_usb_ctrl_base + reg);
 }
 
+extern void ar71xx_add_device_usb(void) __init;
+
 /*
  * GPIO block
  */
@@ -212,47 +205,15 @@ static inline u32 ar71xx_usb_ctrl_rr(unsigned reg)
 #define GPIO_REG_INT_ENABLE	0x24
 #define GPIO_REG_FUNC		0x28
 
-#define AR71XX_GPIO_FUNC_STEREO_EN	BIT(17)
-#define AR71XX_GPIO_FUNC_SLIC_EN	BIT(16)
-#define AR71XX_GPIO_FUNC_SPI_CS2_EN	BIT(13)
-#define AR71XX_GPIO_FUNC_SPI_CS1_EN	BIT(12)
-#define AR71XX_GPIO_FUNC_UART_EN	BIT(8)
-#define AR71XX_GPIO_FUNC_USB_OC_EN	BIT(4)
-#define AR71XX_GPIO_FUNC_USB_CLK_EN	BIT(0)
+#define GPIO_FUNC_STEREO_EN	BIT(17)
+#define GPIO_FUNC_SLIC_EN	BIT(16)
+#define GPIO_FUNC_SPI_CS2_EN	BIT(13)
+#define GPIO_FUNC_SPI_CS1_EN	BIT(12)
+#define GPIO_FUNC_UART_EN	BIT(8)
+#define GPIO_FUNC_USB_OC_EN	BIT(4)
+#define GPIO_FUNC_USB_CLK_EN	BIT(0)
 
 #define AR71XX_GPIO_COUNT	16
-
-#define AR724X_GPIO_FUNC_GE0_MII_CLK_EN		BIT(19)
-#define AR724X_GPIO_FUNC_SPI_EN			BIT(18)
-#define AR724X_GPIO_FUNC_SPI_CS_EN2		BIT(14)
-#define AR724X_GPIO_FUNC_SPI_CS_EN1		BIT(13)
-#define AR724X_GPIO_FUNC_CLK_OBS5_EN		BIT(12)
-#define AR724X_GPIO_FUNC_CLK_OBS4_EN		BIT(11)
-#define AR724X_GPIO_FUNC_CLK_OBS3_EN		BIT(10)
-#define AR724X_GPIO_FUNC_CLK_OBS2_EN		BIT(9)
-#define AR724X_GPIO_FUNC_CLK_OBS1_EN		BIT(8)
-#define AR724X_GPIO_FUNC_ETH_SWITCH_LED4_EN	BIT(7)
-#define AR724X_GPIO_FUNC_ETH_SWITCH_LED3_EN	BIT(6)
-#define AR724X_GPIO_FUNC_ETH_SWITCH_LED2_EN	BIT(5)
-#define AR724X_GPIO_FUNC_ETH_SWITCH_LED1_EN	BIT(4)
-#define AR724X_GPIO_FUNC_ETH_SWITCH_LED0_EN	BIT(3)
-#define AR724X_GPIO_FUNC_UART_RTS_CTS_EN	BIT(2)
-#define AR724X_GPIO_FUNC_UART_EN		BIT(1)
-#define AR724X_GPIO_FUNC_JTAG_DISABLE		BIT(0)
-
-#define AR724X_GPIO_COUNT	18
-
-#define AR91XX_GPIO_FUNC_WMAC_LED_EN	BIT(22)
-#define AR91XX_GPIO_FUNC_EXP_PORT_CS_EN	BIT(21)
-#define AR91XX_GPIO_FUNC_I2S_REFCLKEN	BIT(20)
-#define AR91XX_GPIO_FUNC_I2S_MCKEN	BIT(19)
-#define AR91XX_GPIO_FUNC_I2S1_EN	BIT(18)
-#define AR91XX_GPIO_FUNC_I2S0_EN	BIT(17)
-#define AR91XX_GPIO_FUNC_SLIC_EN	BIT(16)
-#define AR91XX_GPIO_FUNC_UART_RTSCTS_EN	BIT(9)
-#define AR91XX_GPIO_FUNC_UART_EN	BIT(8)
-#define AR91XX_GPIO_FUNC_USB_CLK_EN	BIT(4)
-
 #define AR91XX_GPIO_COUNT	22
 
 extern void __iomem *ar71xx_gpio_base;
@@ -267,10 +228,9 @@ static inline u32 ar71xx_gpio_rr(unsigned reg)
 	return __raw_readl(ar71xx_gpio_base + reg);
 }
 
-void ar71xx_gpio_init(void) __init;
-void ar71xx_gpio_function_enable(u32 mask);
-void ar71xx_gpio_function_disable(u32 mask);
-void ar71xx_gpio_function_setup(u32 set, u32 clear);
+extern void ar71xx_gpio_init(void) __init;
+extern void ar71xx_gpio_function_enable(u32 mask);
+extern void ar71xx_gpio_function_disable(u32 mask);
 
 /*
  * DDR_CTRL block
@@ -287,11 +247,6 @@ void ar71xx_gpio_function_setup(u32 set, u32 clear);
 #define AR71XX_DDR_REG_FLUSH_GE1	0xa0
 #define AR71XX_DDR_REG_FLUSH_USB	0xa4
 #define AR71XX_DDR_REG_FLUSH_PCI	0xa8
-
-#define AR724X_DDR_REG_FLUSH_GE0	0x7c
-#define AR724X_DDR_REG_FLUSH_GE1	0x80
-#define AR724X_DDR_REG_FLUSH_USB	0x84
-#define AR724X_DDR_REG_FLUSH_PCIE	0x88
 
 #define AR91XX_DDR_REG_FLUSH_GE0	0x7c
 #define AR91XX_DDR_REG_FLUSH_GE1	0x80
@@ -319,7 +274,7 @@ static inline u32 ar71xx_ddr_rr(unsigned reg)
 	return __raw_readl(ar71xx_ddr_base + reg);
 }
 
-void ar71xx_ddr_flush(u32 reg);
+extern void ar71xx_ddr_flush(u32 reg);
 
 /*
  * PCI block
@@ -346,19 +301,6 @@ void ar71xx_ddr_flush(u32 reg);
 
 #define PCI_IDSEL_ADL_START	17
 
-#define AR724X_PCI_CFG_BASE	(AR71XX_PCI_MEM_BASE + 0x4000000)
-#define AR724X_PCI_CFG_SIZE	0x1000
-
-#define AR724X_PCI_REG_APP		0x00
-#define AR724X_PCI_REG_RESET		0x18
-#define AR724X_PCI_REG_INT_STATUS	0x4c
-#define AR724X_PCI_REG_INT_MASK		0x50
-
-#define AR724X_PCI_APP_LTSSM_ENABLE	BIT(0)
-#define AR724X_PCI_RESET_LINK_UP	BIT(0)
-
-#define AR724X_PCI_INT_DEV0		BIT(14)
-
 /*
  * RESET block
  */
@@ -382,8 +324,6 @@ void ar71xx_ddr_flush(u32 reg);
 #define AR91XX_RESET_REG_PERF_CTRL		0x20
 #define AR91XX_RESET_REG_PERFC0			0x24
 #define AR91XX_RESET_REG_PERFC1			0x28
-
-#define AR724X_RESET_REG_RESET_MODULE		0x1c
 
 #define WDOG_CTRL_LAST_RESET		BIT(31)
 #define WDOG_CTRL_ACTION_MASK		3
@@ -423,37 +363,19 @@ void ar71xx_ddr_flush(u32 reg);
 #define RESET_MODULE_USB_OHCI_DLL	BIT(6)
 #define RESET_MODULE_USB_HOST		BIT(5)
 #define RESET_MODULE_USB_PHY		BIT(4)
-#define RESET_MODULE_USB_OHCI_DLL_7240	BIT(3)
 #define RESET_MODULE_PCI_BUS		BIT(1)
 #define RESET_MODULE_PCI_CORE		BIT(0)
 
-#define AR724X_RESET_GE1_MDIO		BIT(23)
-#define AR724X_RESET_GE0_MDIO		BIT(22)
-#define AR724X_RESET_PCIE_PHY_SERIAL	BIT(10)
-#define AR724X_RESET_PCIE_PHY		BIT(7)
-#define AR724X_RESET_PCIE		BIT(6)
+#define REV_ID_MASK		0xff
+#define REV_ID_CHIP_MASK	0xf3
+#define REV_ID_CHIP_AR7130	0xa0
+#define REV_ID_CHIP_AR7141	0xa1
+#define REV_ID_CHIP_AR7161	0xa2
+#define REV_ID_CHIP_AR9130	0xb0
+#define REV_ID_CHIP_AR9132	0xb1
 
-#define REV_ID_MAJOR_MASK	0xfff0
-#define REV_ID_MAJOR_AR71XX	0x00a0
-#define REV_ID_MAJOR_AR913X	0x00b0
-#define REV_ID_MAJOR_AR7240	0x00c0
-#define REV_ID_MAJOR_AR7241	0x0100
-#define REV_ID_MAJOR_AR7242	0x1100
-
-#define AR71XX_REV_ID_MINOR_MASK	0x3
-#define AR71XX_REV_ID_MINOR_AR7130	0x0
-#define AR71XX_REV_ID_MINOR_AR7141	0x1
-#define AR71XX_REV_ID_MINOR_AR7161	0x2
-#define AR71XX_REV_ID_REVISION_MASK	0x3
-#define AR71XX_REV_ID_REVISION_SHIFT	2
-
-#define AR91XX_REV_ID_MINOR_MASK	0x3
-#define AR91XX_REV_ID_MINOR_AR9130	0x0
-#define AR91XX_REV_ID_MINOR_AR9132	0x1
-#define AR91XX_REV_ID_REVISION_MASK	0x3
-#define AR91XX_REV_ID_REVISION_SHIFT	2
-
-#define AR724X_REV_ID_REVISION_MASK	0x3
+#define REV_ID_REVISION_MASK	0x3
+#define REV_ID_REVISION_SHIFT	2
 
 extern void __iomem *ar71xx_reset_base;
 
@@ -467,9 +389,8 @@ static inline u32 ar71xx_reset_rr(unsigned reg)
 	return __raw_readl(ar71xx_reset_base + reg);
 }
 
-void ar71xx_device_stop(u32 mask);
-void ar71xx_device_start(u32 mask);
-int ar71xx_device_stopped(u32 mask);
+extern void ar71xx_device_stop(u32 mask);
+extern void ar71xx_device_start(u32 mask);
 
 /*
  * SPI block
@@ -491,9 +412,6 @@ int ar71xx_device_stopped(u32 mask);
 #define SPI_IOC_CS1		SPI_IOC_CS(1)
 #define SPI_IOC_CS2		SPI_IOC_CS(2)
 #define SPI_IOC_CS_ALL		(SPI_IOC_CS0 | SPI_IOC_CS1 | SPI_IOC_CS2)
-
-void ar71xx_flash_acquire(void);
-void ar71xx_flash_release(void);
 
 /*
  * MII_CTRL block

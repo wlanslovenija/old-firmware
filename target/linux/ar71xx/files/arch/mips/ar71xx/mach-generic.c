@@ -1,4 +1,6 @@
 /*
+ *  Generic AR71xx machine support
+ *
  *  Copyright (C) 2008 Gabor Juhos <juhosg@openwrt.org>
  *  Copyright (C) 2008 Imre Kaloz <kaloz@openwrt.org>
  *
@@ -6,12 +8,15 @@
  *  under the terms of the GNU General Public License version 2 as published
  *  by the Free Software Foundation.
  */
-#ifndef __ASM_MACH_AR71XX_IRQ_H
-#define __ASM_MACH_AR71XX_IRQ_H
 
-#define MIPS_CPU_IRQ_BASE	0
-#define NR_IRQS			36
+#include <linux/init.h>
 
-#include_next <irq.h>
+#include <asm/mips_machine.h>
+#include <asm/mach-ar71xx/ar71xx.h>
 
-#endif /* __ASM_MACH_AR71XX_IRQ_H */
+static void __init ar71xx_generic_init(void)
+{
+	/* Nothing to do */
+}
+
+MIPS_MACHINE(AR71XX_MACH_GENERIC, "Generic AR71xx board", ar71xx_generic_init);

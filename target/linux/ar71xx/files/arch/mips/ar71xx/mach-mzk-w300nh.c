@@ -1,7 +1,7 @@
 /*
  *  Planex MZK-W300NH board support
  *
- *  Copyright (C) 2008-2009 Gabor Juhos <juhosg@openwrt.org>
+ *  Copyright (C) 2008 Gabor Juhos <juhosg@openwrt.org>
  *  Copyright (C) 2008 Imre Kaloz <kaloz@openwrt.org>
  *
  *  This program is free software; you can redistribute it and/or modify it
@@ -9,29 +9,16 @@
  *  by the Free Software Foundation.
  */
 
+#include <linux/platform_device.h>
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/partitions.h>
+#include <linux/spi/spi.h>
+#include <linux/spi/flash.h>
+
+#include <asm/mips_machine.h>
 
 #include <asm/mach-ar71xx/ar71xx.h>
-
-#include "machtype.h"
-#include "devices.h"
-#include "dev-m25p80.h"
-#include "dev-ar913x-wmac.h"
-#include "dev-gpio-buttons.h"
-#include "dev-leds-gpio.h"
-
-#define MZK_W300NH_GPIO_LED_STATUS	1
-#define MZK_W300NH_GPIO_LED_WPS		3
-#define MZK_W300NH_GPIO_LED_WLAN	6
-#define MZK_W300NH_GPIO_LED_AP		15
-#define MZK_W300NH_GPIO_LED_ROUTER	16
-
-#define MZK_W300NH_GPIO_BTN_APROUTER	5
-#define MZK_W300NH_GPIO_BTN_WPS		12
-#define MZK_W300NH_GPIO_BTN_RESET	21
-
-#define MZK_W04NU_BUTTONS_POLL_INTERVAL	20
+#include <asm/mach-ar71xx/platform.h>
 
 #ifdef CONFIG_MTD_PARTITIONS
 static struct mtd_partition mzk_w300nh_partitions[] = {
@@ -45,7 +32,7 @@ static struct mtd_partition mzk_w300nh_partitions[] = {
 		.offset		= 0x040000,
 		.size		= 0x010000,
 	} , {
-		.name		= "kernel",
+		.name		= "uImage",
 		.offset		= 0x050000,
 		.size		= 0x160000,
 	} , {
@@ -61,10 +48,6 @@ static struct mtd_partition mzk_w300nh_partitions[] = {
 		.offset		= 0x7e0000,
 		.size		= 0x020000,
 		.mask_flags	= MTD_WRITEABLE,
-	} , {
-		.name		= "firmware",
-		.offset		= 0x050000,
-		.size		= 0x770000,
 	}
 };
 #endif /* CONFIG_MTD_PARTITIONS */
@@ -76,87 +59,22 @@ static struct flash_platform_data mzk_w300nh_flash_data = {
 #endif
 };
 
-static struct gpio_led mzk_w300nh_leds_gpio[] __initdata = {
+static struct spi_board_info mzk_w300nh_spi_info[] = {
 	{
-		.name		= "mzk-w300nh:green:status",
-		.gpio		= MZK_W300NH_GPIO_LED_STATUS,
-		.active_low	= 1,
-	}, {
-		.name		= "mzk-w300nh:blue:wps",
-		.gpio		= MZK_W300NH_GPIO_LED_WPS,
-		.active_low	= 1,
-	}, {
-		.name		= "mzk-w300nh:green:wlan",
-		.gpio		= MZK_W300NH_GPIO_LED_WLAN,
-		.active_low	= 1,
-	}, {
-		.name		= "mzk-w300nh:green:ap",
-		.gpio		= MZK_W300NH_GPIO_LED_AP,
-		.active_low	= 1,
-	}, {
-		.name		= "mzk-w300nh:green:router",
-		.gpio		= MZK_W300NH_GPIO_LED_ROUTER,
-		.active_low	= 1,
+		.bus_num	= 0,
+		.chip_select	= 0,
+		.max_speed_hz	= 25000000,
+		.modalias	= "m25p80",
+		.platform_data  = &mzk_w300nh_flash_data,
 	}
 };
-
-static struct gpio_button mzk_w300nh_gpio_buttons[] __initdata = {
-	{
-		.desc		= "reset",
-		.type		= EV_KEY,
-		.code		= BTN_0,
-		.threshold	= 3,
-		.gpio		= MZK_W300NH_GPIO_BTN_RESET,
-		.active_low	= 1,
-	}, {
-		.desc		= "wps",
-		.type		= EV_KEY,
-		.code		= BTN_1,
-		.threshold	= 3,
-		.gpio		= MZK_W300NH_GPIO_BTN_WPS,
-		.active_low	= 1,
-	}, {
-		.desc		= "aprouter",
-		.type		= EV_KEY,
-		.code		= BTN_2,
-		.threshold	= 3,
-		.gpio		= MZK_W300NH_GPIO_BTN_APROUTER,
-		.active_low	= 0,
-	}
-};
-
-#define MZK_W300NH_WAN_PHYMASK	BIT(4)
-#define MZK_W300NH_MDIO_MASK	(~MZK_W300NH_WAN_PHYMASK)
 
 static void __init mzk_w300nh_setup(void)
 {
-	u8 *eeprom = (u8 *) KSEG1ADDR(0x1fff1000);
+	ar71xx_add_device_spi(NULL, mzk_w300nh_spi_info,
+					ARRAY_SIZE(mzk_w300nh_spi_info));
 
-	ar71xx_set_mac_base(eeprom);
-
-	ar71xx_add_device_mdio(MZK_W300NH_MDIO_MASK);
-
-	ar71xx_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RMII;
-	ar71xx_eth0_data.speed = SPEED_100;
-	ar71xx_eth0_data.duplex = DUPLEX_FULL;
-	ar71xx_eth0_data.has_ar8216 = 1;
-
-	ar71xx_eth1_data.phy_if_mode = PHY_INTERFACE_MODE_RMII;
-	ar71xx_eth1_data.phy_mask = MZK_W300NH_WAN_PHYMASK;
-
-	ar71xx_add_device_eth(0);
-	ar71xx_add_device_eth(1);
-
-	ar71xx_add_device_m25p80(&mzk_w300nh_flash_data);
-
-	ar71xx_add_device_leds_gpio(-1, ARRAY_SIZE(mzk_w300nh_leds_gpio),
-				    mzk_w300nh_leds_gpio);
-
-	ar71xx_add_device_gpio_buttons(-1, MZK_W04NU_BUTTONS_POLL_INTERVAL,
-				       ARRAY_SIZE(mzk_w300nh_gpio_buttons),
-				       mzk_w300nh_gpio_buttons);
-	ar913x_add_device_wmac(eeprom, NULL);
+	ar91xx_add_device_wmac();
 }
 
-MIPS_MACHINE(AR71XX_MACH_MZK_W300NH, "MZK-W300NH", "Planex MZK-W300NH",
-	     mzk_w300nh_setup);
+MIPS_MACHINE(AR71XX_MACH_MZK_W300NH, "Planex MZK-W300NH", mzk_w300nh_setup);
