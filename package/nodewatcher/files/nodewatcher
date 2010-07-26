@@ -148,7 +148,7 @@ mode="$1"
 if [ "$mode" == "" ]; then
   # Output header and then all supported statistics
   echo ";"
-  echo "; nodewatcher Script"
+  echo "; nodewatcher script"
   echo ";"
   
   general_stats
