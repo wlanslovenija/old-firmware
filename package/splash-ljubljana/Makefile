@@ -23,6 +23,15 @@ define Package/splash-ljubljana
   URL:=http://wlan-lj.net
 endef
 
+define Build/Prepare
+endef
+
+define Build/Configure
+endef
+
+define Build/Compile
+endef
+
 define Package/splash-ljubljana/install
 	$(INSTALL_DIR) $(1)/etc/nodogsplash
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs
