@@ -1331,3 +1331,4 @@ CONFIG_PACKAGE_solar=y
 #
 # CONFIG_PACKAGE_lua is not set
 # CONFIG_PACKAGE_luac is not set
+CONFIG_PACKAGE_splash-ljubljana=y
