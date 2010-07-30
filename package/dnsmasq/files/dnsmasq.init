@@ -281,7 +281,6 @@ start() {
 stop() {
 	[ -f /tmp/resolv.conf ] && {
 		rm -f /tmp/resolv.conf
-		ln -s /tmp/resolv.conf.auto /tmp/resolv.conf
 	}
 	killall -q dnsmasq
 	sleep 1
