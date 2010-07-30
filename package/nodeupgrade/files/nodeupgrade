@@ -25,6 +25,7 @@ export RAMFS_COPY_DATA="/etc/passwd /etc/shells"
 
 UPGRADE_ONLY_KERNEL=0
 UPGRADE_ONLY_ROOT=0
+IGNORE_HOSTNAME=0
 
 DOWNLOAD_TIMEOUT=420 # seconds
 DOWNLOAD_RETRY_WAIT_TIME=60 # seconds
@@ -49,13 +50,14 @@ $0 [-n] [-p] [-d] [-l] [-k|-r] <image filename ...>
   -n  do not keep current configuration files after upgrade
   -p  keep current password files after upgrade
   -d  only free memory and download files (if necessary)
-      (be careful, it will sever VPN connection and will not reboot, maybe use -l)
+	  (be careful, it will sever VPN connection and will not reboot, maybe use -l)
   -l  use lite version of freeing memory (do not sever VPN connection)
-      (be careful, there could not be enough memory, maybe use -k or -r)
+	  (be careful, there could not be enough memory, maybe use -k or -r)
   -k  upgrade only kernel partition (but all files have to be specified)
   -r  upgrade only root partition (but all files have to be specified)
+  -h  ignore mismatch of hostname in image filename and system's hostname
   
-  <image filename>    image filename (or HTTP/FTP URL) with embedded checksum and type
+  <image filename>	image filename (or HTTP/FTP URL) with embedded checksum and type
 
 WARNING: It is expected that watchdog can be disabled by TERM signal. If this is not so disable watchdog manually before running this script. Otherwise watchdog could reboot the node in the middle of flashing what is NOT fun.
 EOF
@@ -93,6 +95,20 @@ image_checksum() {
 	checksum="$(awk -f $BASE64AWK -- "$base" 2>/dev/null)"
 }
 
+image_hostname() {
+	hostname="$(basename "$1")"
+	hostname=${hostname%.*}
+	local length=$(( ${#hostname} - 23 ))
+	if [[ "$length" -lt 1 ]]; then
+		echo "Invalid image filename '$1'."
+		exit 1
+	fi
+	hostname=${hostname:0:$length} # removes checksum
+	hostname=${hostname%-*} # removes image type
+	hostname=${hostname%-*} # removes version
+	hostname=${hostname%-*} # removes router type
+}
+
 remote_file() {
 	case "$1" in
 		http://*|ftp://*)
@@ -105,10 +121,10 @@ remote_file() {
 }
 
 remote_file_hostname() {
-	hostname=${1#http://}
-	hostname=${hostname#ftp://}
-	hostname=${hostname%%/*}
-	hostname=${hostname%%:*}
+	remote_hostname=${1#http://}
+	remote_hostname=${remote_hostname#ftp://}
+	remote_hostname=${remote_hostname%%/*}
+	remote_hostname=${remote_hostname%%:*}
 }
 
 check_partitions() {
@@ -173,6 +189,21 @@ check_checksum() {
 		return 1
 	else
 		return 0
+	fi
+}
+
+check_hostname() {
+	local file="$1"
+	local local_hostname="$(uname -n)"
+	image_hostname "$file"
+	if [[ "$hostname" == "$local_hostname" ]]; then
+		return 0
+	elif [[ "$IGNORE_HOSTNAME" -ne 0 ]]; then
+		echo "Hostname in image filename '$hostname' does not match system's hostname '$local_hostname', but ignoring."
+		return 0
+	else
+		echo "Hostname in image filename '$hostname' does not match system's hostname '$local_hostname'."
+		return 1
 	fi
 }
 
@@ -310,6 +341,9 @@ while [ -n "$1" ]; do
 		-r)
 			UPGRADE_ONLY_ROOT=1
 			;;
+		-h)
+			IGNORE_HOSTNAME=1
+			;;
 		-*)
 			echo "Invalid argument '$1'."
 			usage
@@ -333,7 +367,7 @@ elif [[ "$IMAGES_COUNT" -gt 2 ]]; then
 	exit 1	
 fi
 if [[ "$IMAGES_COUNT" -eq 1 ]]; then
-    if [[ "$UPGRADE_ONLY_KERNEL" -ne 0 || "$UPGRADE_ONLY_ROOT" -ne 0 ]]; then
+	if [[ "$UPGRADE_ONLY_KERNEL" -ne 0 || "$UPGRADE_ONLY_ROOT" -ne 0 ]]; then
 		echo "-k and -r arguments can be used only multiple files."
 		usage
 		exit 1
@@ -408,16 +442,19 @@ for image in $IMAGES; do
 		echo "Missing or invalid image checksum in image filename."
 		exit 1
 	fi
+
+	# We check if hostname in image filename matches system's hostname
+	check_hostname "$image" || exit 1
 	
 	if remote_file "$image"; then
 		# We are resolving hostnames in advance as DNS will maybe not work later (when we maybe sever VPN connection) anymore
 		remote_file_hostname "$image"
 		
-		if ! echo "$HOSTS" | grep -q -E " $hostname$" 2>/dev/null; then
-			echo "Resolving '$hostname'."
-			resolved="$(nslookup "$hostname" 2>/dev/null | awk -f "$HOSTSAWK" -v "host=$hostname" 2>/dev/null)"
+		if ! echo "$HOSTS" | grep -q -E " $remote_hostname$" 2>/dev/null; then
+			echo "Resolving '$remote_hostname'."
+			resolved="$(nslookup "$remote_hostname" 2>/dev/null | awk -f "$HOSTSAWK" -v "host=$remote_hostname" 2>/dev/null)"
 			[[ -n "$resolved" ]] || {
-				echo "Hostname '$hostname' lookup failed."
+				echo "Hostname '$remote_hostname' lookup failed."
 				exit 1
 			}
 			HOSTS="$HOSTS"$'\n'"$resolved"
