@@ -67,6 +67,18 @@ general_stats()
   if [[ "${WIFI_IFACE}" == "ath0" ]]; then
     show_entry "wifi.mcast_rate" "`iwpriv ${WIFI_IFACE} get_mcast_rate | grep -Eo 'get_mcast_rate:[0-9]+' | cut -d ':' -f 2`"
   fi
+  
+  # Report current bitrate
+  BITRATE="`iwlist ${WIFI_IFACE} bitrate | grep -Eo 'Current Bit Rate:[0-9]+' | cut -d ':' -f 2`"
+  if [[ "${BITRATE}" == "0" ]]; then
+    BITRATE="`iwpriv ${WIFI_IFACE} get_rate11g | grep -Eo 'get_rate11g:[0-9]+' | cut -d ':' -f 2`"
+  fi
+  show_entry "wifi.bitrate" "${BITRATE}"
+  
+  # Report quality and noise levels
+  LQN_DATA="`cat /proc/net/wireless | grep ${WIFI_IFACE}`"
+  show_entry "wifi.level" "`echo ${LQN_DATA} | awk '{ print $4 }' | cut -d '.' -f 1`"
+  show_entry "wifi.noise" "`echo ${LQN_DATA} | awk '{ print $5 }' | cut -d '.' -f 1`"
 
   show_entry_from_file "wifi.errors" /tmp/wifi_errors_counter "0"
 
