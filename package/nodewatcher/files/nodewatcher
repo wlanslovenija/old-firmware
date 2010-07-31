@@ -62,6 +62,11 @@ general_stats()
   show_entry "wifi.mac" "`ifconfig ${WIFI_IFACE} | grep HWaddr | awk '{ print $5 }' | head -n 1`"
   show_entry "wifi.rts" "`iwconfig ${WIFI_IFACE} | grep -Eo 'RTS thr.(off|[0-9]+ B)' | grep -Eo 'off|[0-9]+'`"
   show_entry "wifi.frag" "`iwconfig ${WIFI_IFACE} | grep -Eo 'Fragment thr.(off|[0-9]+ B)' | grep -Eo 'off|[0-9]+'`"
+  
+  # Show multicast rate only for atheros devices
+  if [[ "${WIFI_IFACE}" == "ath0" ]]; then
+    show_entry "wifi.mcast_rate" "`iwpriv ${WIFI_IFACE} get_mcast_rate | grep -Eo 'get_mcast_rate:[0-9]+' | cut -d ':' -f 2`"
+  fi
 
   show_entry_from_file "wifi.errors" /tmp/wifi_errors_counter "0"
 
