@@ -10,8 +10,8 @@
 <body id="nodogsplash">
 <div id="banner">
 <div id="header">
-<h1><a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net"><span>wlan ljubljana</span></a></h1>
-<h2><a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net"><span>odprto brezžično omrežje Ljubljane</span></a></h2>
+<h1><a><span>wlan ljubljana</span></a></h1>
+<h2><a><span>odprto brezžično omrežje Ljubljane</span></a></h2>
 </div>
 </div>
 <div id="main">
@@ -19,28 +19,51 @@
 <tr>
 <td>
 <h3>Dobrodošel, dobrodošla!</h3>
-<p>Prijavil oziroma prijavila si se na odprto brezžično omrežje Ljubljane, kjer z uporabo splošno razširjenih brezžičnih tehnologij, a z inovativnim pristopom in predvsem medsebojnim sodelovanjem, povezujemo ljubljanske javne, umetniške in kulturne, produkcijske, izobraževalne, raziskovalne in vse druge zainteresirane prostore in posameznike v samostojno in neodvisno brezžično omrežje nad Ljubljano, v katerem je dovolj prostora, svobode in možnosti za nove vsebine, interakcijo in komunikacijo, raziskovanje, izmenjavo podatkov, storitve in alternativen dostop do vsebin Interneta. Na takšen način se vzpostavlja nov medij, ki je prosto dostopen in katerega možnosti uporabe so omejene le z domišljijo in ustvarjalnostjo.</p>
+<p class="description">Povezuješ se na odprto brezžično omrežje Ljubljane, kjer se z uporabo splošno razširjenih brezžičnih tehnologij, a z
+inovativnim pristopom in medsebojnim sodelovanjem povezujemo v samostojno in neodvisno brezžično omrežje nad Ljubljano.</p>
+<p>Omrežje je rezultat pobude izgradnje skupnega odprtega brezžičnega omrežja in pri tem lahko sodeluješ ter pomagaš tudi
+ti. Več o tem na domači strani omrežja.</p>
 </td>
 <td>
 <h3>Welcome!</h3>
-<p>You have connected to the open wireless network of Ljubljana where with the use of common and widespread wireless technology but with the innovative approach and above all with the collaboration we connect Ljubljana's public, artistic and cultural, production, educational, research and all other interested spaces and individuals into an autonomous and independent wireless network over Ljubljana, in which there is enough space, freedom and possibilities for new content, interaction and communication, research, data exchange, services and alternative access to Internet content. This way a new media is emerging, free to access, its possibilities limited only by one's imagination and creativity.</p>
-</td>
-</tr>
-<tr>
-<td>
-<div class="footnote">Če te zanima kaj več o omrežju, se lahko oglasiš na <a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net">naši spletni strani</a>, lahko pa si tudi ogledaš <a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fnodes.wlan-lj.net">podrobnosti o delovanju omrežja</a>. Če ti je omrežje všeč, te vabimo, da se mu aktivno <a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net%2Fwiki%2FSodeluj">pridružiš</a>, lahko pa tudi <a href="$authaction?tok=$tok&amp;redir=https%3A%2F%2Fwww.paypal.com%2Fcgi-bin%2Fwebscr%3Fcmd%3D_s-xclick%26hosted_button_id%3D3295105">doniraš sredstva za opremo preko PayPal-a</a>.</div>
-</td>
-<td>
-<div class="footnote">If you would like to know more about the network, you can visit <a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net">our home page</a>. You can also check <a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fnodes.wlan-lj.net">details about the network status</a>. If you like the network, we invite you to actively <a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net%2Fwiki%2FSodeluj">join</a> it. You can also <a href="$authaction?tok=$tok&amp;redir=https%3A%2F%2Fwww.paypal.com%2Fcgi-bin%2Fwebscr%3Fcmd%3D_s-xclick%26hosted_button_id%3D3295105">donate for network equipment via PayPal</a>.</div>
+<p class="description">You are connecting to the open wireless network of Ljubljana where we with the use of common and widespread wireless
+technology but with the innovative approach and collaboration connect into an autonomous and independent
+wireless network over Ljubljana.</p>
+<p>Network is the result of the initiative to build a common open wireless network. You can also take part and help.
+More about that on the network's homepage.</p>
 </td>
 </tr>
 <tr>
 <td colspan="2" class="buttons">
 <form method="get" action="$authaction" class="auth">
-<input type="hidden" name="tok" value="$tok">
-<input type="hidden" name="redir" value="$redir">
-<input type="submit" value="Vstopi in se pridruži omrežju / Enter and join the network">
+<div>
+<input type="hidden" name="tok" value="$tok" />
+<input type="hidden" name="redir" value="$redir" />
+<input type="submit" value="Vstopi in nadaljuj na željeno stran&#10;Enter and continue to the requested page" />
+</div>
 </form>
+<form method="get" action="$authaction" class="auth">
+<div>
+<input type="hidden" name="tok" value="$tok" />
+<input type="hidden" name="redir" value="http://wlan-lj.net" />
+<input type="submit" value="Vstopi in nadaljuj na domačo stran omrežja&#10;Enter and continue to the network's homepage" />
+</div>
+</form>
+</td>
+</tr>
+<tr>
+<td colspan="2">
+<table class="notice">
+<tr>
+<td>
+<p>Z vstopom v omrežje (vsaj začasno) postaneš del omrežja in skupnosti okoli njega. Uporabljaj ga s čutom za skupno dobro.</p>
+</td>
+<td>
+<p>By entering into the network you (at least temporarily) become part of the network and community around it. Use it with
+a touch for the common good.</p>
+</td>
+</tr>
+</table>
 </td>
 </tr>
 <tr>
@@ -48,17 +71,23 @@
 <table class="warning">
 <tr>
 <td>
-<p><strong>Pozor:</strong> Zaradi odprte brezžične narave omrežja podatki, ki se po njem pretakajo, niso zaščiteni. Zato priporočamo uporabo varnih SSL/TLS povezav do spletnih strani (ki se jih prepozna po <tt>HTTP<strong>S</strong></tt> predponi naslova) in drugih storitev. Prav tako priporočamo vklop požarnega zidu na računalniku v <i>airport</i> (ali podobnem) načinu, ki ne dovoljuje izjem. Več o varni uporabi omrežja se najde <a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net%2Fwiki%2FNavodila%2FVarnost">na naši spletni strani</a>.</p>
+<p><strong>Pozor:</strong> Zaradi odprte brezžične narave omrežja podatki, ki se po njem pretakajo, niso zaščiteni. Zato
+priporočamo uporabo varnih SSL/TLS povezav do spletnih strani (ki se jih prepozna po <tt>HTTP<strong>S</strong></tt>
+predponi naslova) in drugih storitev. Prav tako priporočamo vklop požarnega zidu na računalniku v <i>airport</i> (ali
+podobnem) načinu, ki ne dovoljuje izjem požarnega zidu.</p>
 </td><td>
 <p>
-<strong>Warning:</strong> Because of the network's open wireless nature data transmitted over it is not protected. We recommend usage of secure SSL/TLS connections to web pages (which are recognizable by <tt>HTTP<strong>S</strong></tt> address prefix) and other services. Furthermore, we recommend to activate firewall on the computer in <i>airport</i> (or similar) mode, which does not allow exceptions. More about safe use of the network can be found <a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net%2Fwiki%2FNavodila%2FVarnost">on our home page</a>.</p>
+<strong>Warning:</strong> Because of the network's open wireless nature data transmitted over it is not protected. We
+recommend usage of secure SSL/TLS connections to web pages (which are recognizable by <tt>HTTP<strong>S</strong></tt>
+address prefix) and other services. Furthermore, we recommend to activate firewall on the computer in <i>airport</i> (or
+similar) mode, which does not allow firewall exceptions.</p>
 </td>
 </tr>
 </table>
 </td>
 </tr>
 </table>
-<div id="footer"><a href="$authaction?tok=$tok&amp;redir=http%3A%2F%2Fwlan-lj.net">http://wlan-lj.net</a> | <a href="mailto:open@wlan-lj.net">open@wlan-lj.net</a></div>
+<div id="footer">http://wlan-lj.net | open@wlan-lj.net</div>
 </div>
 </body>
 </html>
