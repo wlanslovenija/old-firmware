@@ -75,9 +75,9 @@ general_stats()
   fi
   show_entry "wifi.bitrate" "${BITRATE}"
   
-  # Report quality and noise levels
+  # Report signal and noise levels
   LQN_DATA="`cat /proc/net/wireless | grep ${WIFI_IFACE}`"
-  show_entry "wifi.level" "`echo ${LQN_DATA} | awk '{ print $4 }' | cut -d '.' -f 1`"
+  show_entry "wifi.signal" "`echo ${LQN_DATA} | awk '{ print $4 }' | cut -d '.' -f 1`"
   show_entry "wifi.noise" "`echo ${LQN_DATA} | awk '{ print $5 }' | cut -d '.' -f 1`"
 
   show_entry_from_file "wifi.errors" /tmp/wifi_errors_counter "0"
