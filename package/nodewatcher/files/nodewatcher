@@ -133,6 +133,19 @@ nds_stats()
 }
 
 #
+# Displays DHCP lease statistics (per-subnet)
+#
+dhcp_stats()
+{
+  LEASES=$(cat /tmp/dhcp.leases | awk '{ print $3 }')
+  client_id=0
+  for lease in $LEASES; do
+    show_entry "dhcp.client${client_id}.ip" $lease
+    let client_id++
+  done
+}
+
+#
 # Displays current solar module status when available.
 #
 solar_stats()
@@ -170,6 +183,7 @@ if [ "$mode" == "" ]; then
   
   general_stats
   traffic_stats
+  dhcp_stats
   
   # Check for nodogsplash support
   if [ -x /usr/bin/ndsctl -a -e /etc/nodewatcher/parse_nds.awk ]; then
