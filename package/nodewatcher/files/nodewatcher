@@ -5,6 +5,8 @@
 
 # Configuration
 SOLAR_MEASURE_CACHE="/var/nodewatcher.solar_measure"
+DIGITEMP_HOME="/tmp/"
+DIGITEMP_RC_FILE="$DIGITEMP_HOME.digitemprc"
 
 #
 # A helper function for outputing key-value pairs in proper
@@ -150,11 +152,11 @@ dhcp_stats()
 #
 solar_stats()
 {
-  if [ -f $SOLAR_MEASURE_CACHE ]; then
-    cat $SOLAR_MEASURE_CACHE
+  if [ -f "$SOLAR_MEASURE_CACHE" ]; then
+    cat "$SOLAR_MEASURE_CACHE"
   else
-    solar_measure_stats > $SOLAR_MEASURE_CACHE
-    cat $SOLAR_MEASURE_CACHE
+    solar_measure_stats > "$SOLAR_MEASURE_CACHE"
+    cat "$SOLAR_MEASURE_CACHE"
   fi
 }
 
@@ -170,6 +172,27 @@ solar_measure_stats()
   for entry in $STATS; do
     show_entry "solar.${entry}" "`/usr/bin/solar -d ${DEVICE} -b 9600 -p ${entry} 2> /dev/null`"
   done
+}
+
+#
+# Displays digitemp measurements when available.
+#
+digitemp_stats()
+{
+  PWD=$(pwd)
+  cd "$DIGITEMP_HOME"
+  if [ ! -f "$DIGITEMP_RC_FILE" ]; then
+    for file in "/dev/tts/1" "/dev/ttyS1" "/dev/tts/0" "/dev/ttyS0"; do
+      if [ -c "$file" ]; then
+        digitemp_DS9097 -q -s "$file" -i >/dev/null 2>/dev/null
+      fi
+    done
+  fi
+  if [ -f "$DIGITEMP_RC_FILE" ]; then
+    /usr/bin/digitemp_DS9097 -a -q -o "environment.sensor%s.temp: %C
+environment.sensor%s.serial: %R" 2>/dev/null
+  fi
+  cd "$PWD"
 }
 
 # Arguments
@@ -193,6 +216,11 @@ if [ "$mode" == "" ]; then
   # Check for solar support
   if [ -x /usr/bin/solar ]; then
     solar_stats
+  fi
+
+  # Check for digitemp support
+  if [ -x /usr/bin/digitemp_DS9097 ]; then
+    digitemp_stats
   fi
 elif [ "$mode" == "solar_measure" ]; then
   # Check for solar support
