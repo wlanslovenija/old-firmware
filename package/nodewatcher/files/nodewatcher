@@ -1,230 +1,66 @@
 #!/bin/sh
 #
 # nodewatcher cgi-bin script
-# 
+#
+
+# Include common functions (these functions will also be available
+# to all modules automatically, since modules are imported)
+. /lib/nodewatcher/common.sh
 
 # Configuration
-SOLAR_MEASURE_CACHE="/var/nodewatcher.solar_measure"
-DIGITEMP_HOME="/tmp/"
-DIGITEMP_RC_FILE="$DIGITEMP_HOME.digitemprc"
+NODEWATCHER_VERSION_SERIAL=2
+NODEWATCHER_MODULE_DIR="/etc/nodewatcher.d"
 
 #
-# A helper function for outputing key-value pairs in proper
-# format.
+# Calls a function if it exists
 #
-show_entry()
+call_function_if_exists()
 {
-  KEY="$1"
-  VALUE="$2"
+  local function=$1
+  shift
   
-  echo "${KEY}: ${VALUE}"
+  if [ "`type $function 2>/dev/null`" == "$function is a shell function" ]; then
+    $function $*
+  fi
 }
 
 #
-# A helper function for outputting key-value pairs where
-# value is read from a file if one exists, otherwise the
-# default value is used.
+# Imports a module into this script and runs predefined functions
 #
-show_entry_from_file()
+run_module()
 {
-  KEY="$1"
-  FNAME="$2"
-  DEF="$3"
-
-  if [ -f "${FNAME}" ]; then
-    show_entry "${KEY}" "`cat ${FNAME}`"
+  local module="$1"
+  local mode="$2"
+  . $module
+  
+  # Extract serial number and output it
+  show_entry "META.modules.${MODULE_ID}" "${MODULE_SERIAL}"
+  
+  # Call different functions depending on mode
+  if [ "$mode" == "" ]; then
+    call_function_if_exists report
   else
-    show_entry "${KEY}" "${DEF}"
+    call_function_if_exists handle_$mode
   fi
-}
-
-#
-# Displays general statistics about a node such as firmware version,
-# local time, uptime, bssid, essid, channel.
-#
-general_stats()
-{
-  # System stuff
-  show_entry_from_file "general.uuid" /etc/uuid "missing"
-  show_entry_from_file "general.version" /etc/version "missing"
-  show_entry "general.local_time" "`date +%s`"
-  show_entry "general.uptime" "`cat /proc/uptime`"
-  show_entry "general.loadavg" "`cat /proc/loadavg`"
-  show_entry "general.memfree" "`cat /proc/meminfo | awk '/^MemFree/ { print $2 }'`"
-  show_entry "general.buffers" "`cat /proc/meminfo | awk '/^Buffers/ { print $2 }'`"
-  show_entry "general.cached" "`cat /proc/meminfo | awk '/^Cached/ { print $2 }'`"
-  
-  # Wireless parameters
-  WIFI_IFACE="`iwconfig 2>/dev/null | grep ESSID | awk '{ print $1 }' | head -n 1`"
-  show_entry "wifi.bssid" "`iwconfig ${WIFI_IFACE} 2>/dev/null | grep Cell | awk '{ print $5 }'`"
-  show_entry "wifi.essid" "`iwconfig ${WIFI_IFACE} 2>/dev/null | grep ESSID | awk '{ split($4, a, \"\\"\"); printf(\"%s\", a[2]); }'`"
-  show_entry "wifi.frequency" "`iwconfig ${WIFI_IFACE} 2>/dev/null | grep Frequency | awk '{ print $2 }' | cut -d ':' -f 2`"
-  # Commented out because of the iwlist (madwifi) memory leak, #209
-  #show_entry "wifi.cells" "`iwlist scan 2>/dev/null | grep 'Cell.*Address' | wc -l`"
-  show_entry "wifi.mac" "`ifconfig ${WIFI_IFACE} | grep HWaddr | awk '{ print $5 }' | head -n 1`"
-  show_entry "wifi.rts" "`iwconfig ${WIFI_IFACE} | grep -Eo 'RTS thr.(off|[0-9]+ B)' | grep -Eo 'off|[0-9]+'`"
-  show_entry "wifi.frag" "`iwconfig ${WIFI_IFACE} | grep -Eo 'Fragment thr.(off|[0-9]+ B)' | grep -Eo 'off|[0-9]+'`"
-  
-  # Show multicast rate only for atheros devices
-  if [[ "${WIFI_IFACE}" == "ath0" ]]; then
-    show_entry "wifi.mcast_rate" "`iwpriv ${WIFI_IFACE} get_mcast_rate | grep -Eo 'get_mcast_rate:[0-9]+' | cut -d ':' -f 2`"
-  fi
-  
-  # Report current bitrate
-  BITRATE="`iwlist ${WIFI_IFACE} bitrate | grep -Eo 'Current Bit Rate:[0-9]+' | cut -d ':' -f 2`"
-  if [[ "${BITRATE}" == "0" ]]; then
-    BITRATE="`iwpriv ${WIFI_IFACE} get_rate11g | grep -Eo 'get_rate11g:[0-9]+' | cut -d ':' -f 2`"
-  fi
-  show_entry "wifi.bitrate" "${BITRATE}"
-  
-  # Report signal and noise levels
-  LQN_DATA="`cat /proc/net/wireless | grep ${WIFI_IFACE}`"
-  show_entry "wifi.signal" "`echo ${LQN_DATA} | awk '{ print $4 }' | cut -d '.' -f 1`"
-  show_entry "wifi.noise" "`echo ${LQN_DATA} | awk '{ print $5 }' | cut -d '.' -f 1`"
-
-  show_entry_from_file "wifi.errors" /tmp/wifi_errors_counter "0"
-
-  # DNS metrics
-  show_entry_from_file "dns.local" /var/dns_test_local "0"
-  show_entry_from_file "dns.remote" /var/dns_test_remote "0"
-  
-  # Firewall problems
-  show_entry_from_file "iptables.redirection_problem" /tmp/iptables_redirection_problem "0"
-  
-  # Connectivity loss counter
-  show_entry_from_file "net.losses" /tmp/loss_counter "0"
-  show_entry "net.vpn.upload_limit" "`tc qdisc show dev tap0 2>/dev/null | grep -Eo '[0-9]+.?bit'`"
-  show_entry "net.vpn.mac" "`ip link show dev tap0 2>/dev/null | tail -n 1 | awk '{ print $2 }'`"
-}
-
-#
-# Displays traffic statistics for each network interface found.
-#
-traffic_stats()
-{
-  IFACES=`cat /proc/net/dev | awk -F: '!/\|/ { gsub(/[[:space:]]*/, "", $1); split($2, a, " "); printf("%s=%s=%s ", $1, a[1], a[9]) }'`
-  
-  # Output entries for each interface
-  for entry in $IFACES; do
-    iface=`echo $entry | cut -d '=' -f 1`
-    rcv=`echo $entry | cut -d '=' -f 2`
-    xmt=`echo $entry | cut -d '=' -f 3`
-    
-    if [[ "$iface" != "lo" && "$iface" != "wmaster0" ]]; then
-      if [[ "`ip link show ${iface} | head -n 1 | grep UP`" != "" ]]; then
-        show_entry "iface.${iface}.down" $rcv
-        show_entry "iface.${iface}.up" $xmt
-      fi
-    fi
-  done
-}
-
-#
-# Displays nodogsplash client statistics when available.
-#
-nds_stats()
-{
-  /usr/bin/ndsctl -s /var/run/nodogsplash.sock status >/dev/null 2>/dev/null
-
-  if [ "$?" == "0" ]; then
-    /usr/bin/ndsctl -s /var/run/nodogsplash.sock clients | awk -f /etc/nodewatcher/parse_nds.awk
-    show_entry_from_file "nds.down" /var/nds_status "0"
-  else
-    show_entry "nds.down" 1
-  fi
-}
-
-#
-# Displays DHCP lease statistics (per-subnet)
-#
-dhcp_stats()
-{
-  LEASES=$(cat /tmp/dhcp.leases | awk '{ print $3 }')
-  client_id=0
-  for lease in $LEASES; do
-    show_entry "dhcp.client${client_id}.ip" $lease
-    let client_id++
-  done
-}
-
-#
-# Displays current solar module status when available.
-#
-solar_stats()
-{
-  if [ -f "$SOLAR_MEASURE_CACHE" ]; then
-    cat "$SOLAR_MEASURE_CACHE"
-  else
-    solar_measure_stats > "$SOLAR_MEASURE_CACHE"
-    cat "$SOLAR_MEASURE_CACHE"
-  fi
-}
-
-solar_measure_stats()
-{
-  STATS="batvoltage solvoltage charge load state"
-  if [ -c /dev/ttyS1 ]; then
-    DEVICE="/dev/ttyS1"
-  else
-    DEVICE="/dev/tts/1"
-  fi
-  
-  for entry in $STATS; do
-    show_entry "solar.${entry}" "`/usr/bin/solar -d ${DEVICE} -b 9600 -p ${entry} 2> /dev/null`"
-  done
-}
-
-#
-# Displays digitemp measurements when available.
-#
-digitemp_stats()
-{
-  PWD=$(pwd)
-  cd "$DIGITEMP_HOME"
-  if [ ! -f "$DIGITEMP_RC_FILE" ]; then
-    for file in "/dev/tts/1" "/dev/ttyS1" "/dev/tts/0" "/dev/ttyS0"; do
-      if [ -c "$file" ]; then
-        digitemp_DS9097 -q -s "$file" -i >/dev/null 2>/dev/null
-      fi
-    done
-  fi
-  if [ -f "$DIGITEMP_RC_FILE" ]; then
-    /usr/bin/digitemp_DS9097 -a -q -o "environment.sensor%s.temp: %C
-environment.sensor%s.serial: %R" 2>/dev/null
-  fi
-  cd "$PWD"
 }
 
 # Arguments
 mode="$1"
 
 if [ "$mode" == "" ]; then
-  # Output header and then all supported statistics
+  # Output header when no mode passed in
   echo ";"
-  echo "; nodewatcher script"
+  echo "; nodewatcher monitoring system"
   echo ";"
   
-  general_stats
-  traffic_stats
-  dhcp_stats
-  
-  # Check for nodogsplash support
-  if [ -x /usr/bin/ndsctl -a -e /etc/nodewatcher/parse_nds.awk ]; then
-    nds_stats
-  fi
-  
-  # Check for solar support
-  if [ -x /usr/bin/solar ]; then
-    solar_stats
-  fi
-
-  # Check for digitemp support
-  if [ -x /usr/bin/digitemp_DS9097 ]; then
-    digitemp_stats
-  fi
-elif [ "$mode" == "solar_measure" ]; then
-  # Check for solar support
-  if [ -x /usr/bin/solar ]; then
-    solar_measure_stats > $SOLAR_MEASURE_CACHE
-  fi
+  # Display nodewatcher format version serial
+  show_entry "META.version" ${NODEWATCHER_VERSION_SERIAL}
 fi
+
+# Enumerate and run all child scripts
+if [[ -e ${NODEWATCHER_MODULE_DIR} ]]; then
+  for SCRIPT in ${NODEWATCHER_MODULE_DIR}/*; do
+    run_module "$SCRIPT" "$mode"
+  done
+fi
+

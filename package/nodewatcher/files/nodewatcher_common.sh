@@ -26,3 +26,34 @@ get_local_ip()
   LOCAL_IP="`uci get network.subnet0.ipaddr`"
 }
 
+#
+# A helper function for outputing key-value pairs in proper
+# format.
+#
+show_entry()
+{
+  KEY="$1"
+  VALUE="$2"
+  
+  echo "${KEY}: ${VALUE}"
+}
+
+#
+# A helper function for outputting key-value pairs where
+# value is read from a file if one exists, otherwise the
+# default value is used.
+#
+show_entry_from_file()
+{
+  KEY="$1"
+  FNAME="$2"
+  DEF="$3"
+
+  if [ -f "${FNAME}" ]; then
+    show_entry "${KEY}" "`cat ${FNAME}`"
+  else
+    show_entry "${KEY}" "${DEF}"
+  fi
+}
+
+
