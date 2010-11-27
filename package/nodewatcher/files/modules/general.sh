@@ -17,6 +17,12 @@ report()
   show_entry "general.local_time" "`date +%s`"
   show_entry "general.uptime" "`cat /proc/uptime`"
   show_entry "general.loadavg" "`cat /proc/loadavg`"
+  
+  # Memory
+  # TODO should be restructured into
+  # general.memory.free
+  # general.memory.buffers
+  # general.memory.cache
   show_entry "general.memfree" "`cat /proc/meminfo | awk '/^MemFree/ { print $2 }'`"
   show_entry "general.buffers" "`cat /proc/meminfo | awk '/^Buffers/ { print $2 }'`"
   show_entry "general.cached" "`cat /proc/meminfo | awk '/^Cached/ { print $2 }'`"

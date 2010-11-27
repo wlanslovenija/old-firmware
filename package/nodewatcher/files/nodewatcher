@@ -34,7 +34,7 @@ run_module()
   . $module
   
   # Extract serial number and output it
-  show_entry "META.modules.${MODULE_ID}" "${MODULE_SERIAL}"
+  show_entry "META.modules.${MODULE_ID//./-}.serial" "${MODULE_SERIAL}"
   
   # Call different functions depending on mode
   if [ "$mode" == "" ]; then
