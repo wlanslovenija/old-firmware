@@ -15,7 +15,9 @@ if [ "$WIFI_CHANNEL" != "" ]; then
 
   # If channels don't match, reboot
   if [ "$WIFI_CHANNEL" != "$CHANNEL" ]; then
+    logger "nodewatcher-watchdog: Detected wifi channel mismatch in brcm-2.4 driver! Rebooting in 30 seconds."
     sleep 30
+    logger "nodewatcher-watchdog: Rebooting now due to channel mismatch!"
     reboot
   fi
 fi
