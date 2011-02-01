@@ -3,8 +3,6 @@
 # DIGITEMP ONE-WIRE TEMPERATURE SENSORS
 #
 
-# TODO This module should be moved to nodewatcher-digitemp package
-
 # Module metadata
 MODULE_ID="sensors.onewire.digitemp"
 MODULE_SERIAL=1

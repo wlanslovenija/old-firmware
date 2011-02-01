@@ -9,7 +9,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/nullhttpd
   SECTION:=utils
   CATEGORY:=Utilities
-  DEPENDS:=+nodogsplash +nodewatcher
+  DEPENDS:=+nodogsplash
   TITLE:=Null HTTP daemon
 endef
 

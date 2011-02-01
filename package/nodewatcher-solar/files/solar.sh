@@ -3,8 +3,6 @@
 # SOLAR REGULATOR REPORTING MODULE
 #
 
-# TODO This module should be moved to nodewatcher-solar package
-
 # Module metadata
 MODULE_ID="sensors.power.solar"
 MODULE_SERIAL=1
