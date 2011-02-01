@@ -42,7 +42,7 @@ define Package/nodewatcher-clients/install
 	
 	# Modules
 	$(INSTALL_DIR) $(1)/etc/nodewatcher.d
-	$(CP) ./files/modules/clients.sh $(1)/etc/nodewatcher.d/clients.sh
+	$(CP) ./files/clients.sh $(1)/etc/nodewatcher.d/clients.sh
 endef
 
 $(eval $(call BuildPackage,nodewatcher-clients))
