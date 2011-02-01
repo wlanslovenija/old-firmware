@@ -23,11 +23,11 @@ define Build/Compile
 endef
 
 define Package/nodewatcher-watchdog/install
-        # Sanity checks
-        $(INSTALL_DIR) $(1)/etc/crontabs/run.5
-        $(INSTALL_BIN) ./files/check_sanity $(1)/etc/crontabs/run.5/00-check_sanity
-        $(INSTALL_BIN) ./files/check_wifi_channel $(1)/etc/crontabs/run.5/01-check_wifi_channel
-        $(INSTALL_BIN) ./files/check_dns $(1)/etc/crontabs/run.5/02-check_dns
+	# Sanity checks
+	$(INSTALL_DIR) $(1)/etc/crontabs/run.5
+	$(INSTALL_BIN) ./files/check_sanity $(1)/etc/crontabs/run.5/00-check_sanity
+	$(INSTALL_BIN) ./files/check_wifi_channel $(1)/etc/crontabs/run.5/01-check_wifi_channel
+	$(INSTALL_BIN) ./files/check_dns $(1)/etc/crontabs/run.5/02-check_dns
 
 	# Modules
 	$(INSTALL_DIR) $(1)/etc/nodewatcher.d
