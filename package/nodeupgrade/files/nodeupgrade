@@ -33,8 +33,8 @@ DOWNLOAD_RETRY_NUMBER=3 # number of retries
 
 DOWNLOAD_ONLY=0
 
-BASE64AWK=/usr/lib/base64.awk
-HOSTSAWK=/usr/lib/hosts.awk
+BASE64AWK=/lib/upgrade/base64.awk
+HOSTSAWK=/lib/upgrade/hosts.awk
 
 script_interrupted() {
 	echo "Interrupted."
