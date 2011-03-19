@@ -187,7 +187,7 @@ define Package/base-files$(TARGET)/install
 	done
 
 # Update version
-	echo ".r$(shell svnversion -n .)" >> $(1)/etc/version
+	echo ".$(shell hg identify -i)" >> $(1)/etc/version
 endef
 
 define Package/libgcc/install
