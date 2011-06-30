@@ -104,7 +104,7 @@ start() {
 	
 	### FORWARD ###
 	
-	iptables -P FORWARD DROP
+	iptables -P FORWARD ACCEPT
 	
 	iptables -A FORWARD -p tcp --tcp-flags SYN SYN --tcp-option \! 2 -j DROP
 	iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
