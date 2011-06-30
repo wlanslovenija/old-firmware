@@ -106,10 +106,8 @@ start() {
 	
 	iptables -P FORWARD DROP
 	
-	iptables -A FORWARD -m state --state INVALID -j DROP
 	iptables -A FORWARD -p tcp --tcp-flags SYN SYN --tcp-option \! 2 -j DROP
 	iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-	iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
 	
 	# Disallows routing OLSR packets in a network
 	iptables -A FORWARD -p udp --dport 698 -j DROP
@@ -125,11 +123,8 @@ start() {
 	iptables -A FORWARD -p udp -d $VPN_HOST2 --dport $VPN_PORT -j REJECT --reject-with icmp-net-prohibited
 	
 	# Disallows routing from or to a wan segment
-	[ -n "$WAN_IF" ] && iptables -A FORWARD -m state --state NEW $WAN_IN -j DROP
-	[ -n "$WAN_IF" ] && iptables -A FORWARD -m state --state NEW $WAN_OUT -j DROP
-	
-	# Allows routing inside other segments
-	iptables -A FORWARD -m state --state NEW -j ACCEPT
+	[ -n "$WAN_IF" ] && iptables -A FORWARD $WAN_IN -j DROP
+	[ -n "$WAN_IF" ] && iptables -A FORWARD $WAN_OUT -j DROP
 	
 	### OUPUT ###
 	
