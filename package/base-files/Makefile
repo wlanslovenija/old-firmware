@@ -187,7 +187,7 @@ define Package/base-files$(TARGET)/install
 	done
 
 # Update version
-	echo ".$(shell hg identify -n)-$(shell hg identify -i)" | sed 's/[^0-9A-Za-z.-]//g' >> $(1)/etc/version
+	echo ".$(shell git describe)" | sed 's/[^0-9A-Za-z.-]//g' >> $(1)/etc/version
 endef
 
 define Package/libgcc/install
